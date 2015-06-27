@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+.camimage {
+  width:100%;
+  height:100%;
+}
+</style>
+<div class="container-fluid">
+
+  <div class="row">
+{% for server in servers %}
+  {% for cam in server.cams %}
+  <div class="col-md-3">
+    <a href="{% url 'motioncontrol.views.showcam' cam.slug %}">
+    <img class="camimage" id="{{cam.server.name}}_{{cam.thread_number}}" src="{% url 'motioncontrol.views.snapshot' cam.slug %}">
+    </a>
+  </div>
+  {% endfor %}
+{% endfor %}
+  </div>
+</div>
+<script>
+
+function refreshCam(cam_id) {
+  console.log("Refresh " + cam_id);
+  src = $('#'+cam_id).attr('src');
+  if (src) {
+    $('#'+cam_id).attr('src',src.split("&")[0] + "&ts=" + (Date.now() / 1000 | 0)).fadeIn();
+  }
+   
+  //obj.src = obj.src.split("&")[0] + "&ts=" + (Date.now() / 1000 | 0);
+}
+
+$(function(){
+  var focus = true;
+  var multiplier = 1;
+  
+  $('.camimage').on('load',function (e) {
+      setTimeout(function(){
+            refreshCam(e.currentTarget.id);
+      },(Math.floor(Math.random()*10000)+10000)*multiplier);   
+  });
+
+  $(".camimage").each(function(id,obj){
+    // refresh di sicurezza ogni 10 minuti
+    console.log("Refresh 10Min");
+    setTimeout(function(){
+      refreshCam(obj.id);
+    },300*1000);    
+  });
+
+
+  
+  window.onblur = function() { 
+    focus = false; 
+    multiplier = 1000;
+    console.log("Lost focus");
+    document.title="MotionControl - Slow Refresh";
+  }
+  window.onfocus = function() { 
+    // refresh on window focus 
+    console.log("Got focus");
+    document.title="MotionControl - Fast Refresh";
+    focus = true; 
+    multiplier = 1;
+    $(".camimage").each(function(id,obj){
+      // refresh di sicurezza ogni 10 minuti
+      console.log("Focus Refresh");
+      setTimeout(function(){
+        refreshCam(obj.id);
+      },1000);    
+    });    
+    
+  }
+  document.onblur = window.onblur;
+  document.focus = window.focus;
+
+});
+
+</script>
+{% endblock %}

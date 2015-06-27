@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+.evimage {
+  width:100%;
+  height:100%;
+}
+.camimage {
+  width:100%;
+}
+</style>
+<div class="container-fluid">
+    <div class="col-md-4">
+        <img class="camimage" src="{{cam.streamurl}}">
+    </div>
+    <div class="col-md-8">
+        <div class="container-fluid">
+            {% for l in cam.last_events %}
+            <div class="col-md-3">
+                <img class="evimage" src="{% url 'motioncontrol.views.event_pic' l.id %}">
+            </div>
+            {% endfor %}
+        
+        </div>
+    </div>
+</div>
+{% endblock %}
