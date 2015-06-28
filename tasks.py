@@ -6,8 +6,9 @@ import json,os
 from datetime import datetime,timedelta
 import logging
 from django.core.cache import cache
+from motioncontrol.signals import motion_alert,picture_alert
 
-def parseevent(s):
+def parseevent(data):
 
     # eventualmente avvio altri tasks
     if not cache.get("%s-sync-cams" % __package__):
@@ -19,7 +20,6 @@ def parseevent(s):
         cache.set("%s-purge" % __package__,True,3600)    
     
     try:
-        data = json.loads(s)
         if data[1] == "lost":
             cam = Cam.objects.get(slug=data[2])
             cam.online = False
@@ -27,8 +27,10 @@ def parseevent(s):
 
         if data[1] == "motion":
             cam = Cam.objects.get(slug=data[2])
+            cam.last_event = datetime.strptime("%s%s" % (data[3],data[4]),"%Y%m%d%H%M%S")
             cam.online = True
-            cam.save()            
+            cam.save()     
+            motion_alert.send(cam,data=data)
             #for ua in cam.TelegramUserAlert_set.filter(receive_alerts=True):
             #    ua.sendAlert(cam,data[1])            
 
@@ -36,10 +38,11 @@ def parseevent(s):
             cam = Cam.objects.get(slug=data[2])
             cam.online = True
             cam.save()      
+            
             event,created = Event.objects.get_or_create(cam=cam,datetime=datetime.strptime(data[3]+data[4],"%Y%m%d%H%M%S"),event_type=data[5],filename=os.path.split(data[7])[1])    
-
-            for ua in cam.TelegramUserAlert_set.filter(receive_alerts=True):
-                ua.sendAlert(event,data[1])
+            picture_alert.send(cam,data=event)
+            #for ua in cam.TelegramUserAlert_set.filter(receive_alerts=True):
+            #    ua.sendAlert(event,data[1])
             
     except Exception,e:
         print "mc ParseEvent Error: %s" % e

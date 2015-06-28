@@ -53,18 +53,18 @@ def snapshot(request,cam_slug):
         return HttpResponse(b"",content_type='image/jpeg')
     
     img = cam.snapshot()
-    response = HttpResponse(content_type='image/jpeg')
-    img.save(response, "JPEG")
-    return response     
+    if img:
+        response = HttpResponse(content_type='image/jpeg')
+        img.save(response, "JPEG")
+        return response     
+    else:
+        return HttpResponse()
     
 
 
 @csrf_exempt
 def webhook(request):
-    from motioncontrol.tasks import parseevent
-    try:
-        parseevent(request.body)
-    except Exception,e:
-        print "Error WebHook motion %s" % e 
+    from motioncontrol.signals import motion_event
+    motion_event.send(__name__,data=json.loads(request.body))
     
     return HttpResponse()

@@ -7,7 +7,7 @@ class ConfigValueAdmin(admin.ModelAdmin):
     list_filter = ('cam__name',)
 
 class CamAdmin(admin.ModelAdmin):
-    list_display = ('slug','server', 'name', 'thread_number','output_pictures')
+    list_display = ('slug','server', 'name', 'thread_number','output_pictures','online')
     list_filter = ('server__name',)
 
 

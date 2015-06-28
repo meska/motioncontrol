@@ -16,47 +16,66 @@ from urllib import quote
 from urlparse import urljoin,urlsplit
 #logger = logging.getLogger(__name__)
 
-# Create your models here.
+
+
+
 class Server(models.Model):
     name = models.CharField(max_length=100,unique=True)
     admin_url = models.CharField(max_length=200,unique=True,default='http://127.0.0.1:8000/')
-    config_folder = models.CharField(max_length=200,null=True,blank=True)
-    local_data_folder = models.CharField(max_length=200,null=True,blank=True)
-    remote_data_folder = models.CharField(max_length=200,null=True,blank=True,help_text='Use if motion server on different system')
+    local_config_folder = models.CharField(max_length=200,null=True,blank=True,help_text='On motion server')
+    local_data_folder = models.CharField(max_length=200,null=True,blank=True,help_text='On motion server')
+    remote_config_folder = models.CharField(max_length=200,null=True,blank=True,help_text='On Django server')
+    remote_data_folder = models.CharField(max_length=200,null=True,blank=True,help_text='On Django server')
     
     
-    #class Meta:
+    class Meta:
+        managed=True
         #app_label = 'motioncontrol'
 
     
     def __unicode__(self):
         return self.name
     
-    def getVal(self,name):
-        try:   
-            out = ""
-            res = requests.get(urljoin(self.admin_url,'0/config/get?query=%s' % (name))).text.splitlines()[0:-1]
-            for r in res:
-                out+=r.split(' = ')[1]
-                return out
-        except Exception,e:
-            import inspect
-            logging.error("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
-        return ""
-    
-    def setVal(self,name,val):
+    def getVal(self,thread_number,name):
+        # get values from motioncontrol server with retry
+        c = cache.get('motion-setting-%s-%s' % (thread_number,name))
+        if c:
+            return c 
+
         try:
-            if not val == self.getVal(name).strip():
-                r = requests.get(urljoin(self.admin_url,'0/config/set'),params={name:quote(val)})
-                if r.text.splitlines()[-1] == 'Done':
-                    r = requests.get(urljoin(self.admin_url,'0/config/writeyes'))
-                
+            r = requests.get('%s%s/config/get' % (self.admin_url,thread_number),params={'query':name},timeout=30)
+            if r.status_code == requests.codes.ok:
+                # get only the first line atm
+                val = r.text.splitlines()[0].split("=")[1].strip() 
+                c = cache.set('motion-setting-%s-%s' % (thread_number,name),val,60)
+                return val
+
         except Exception,e:
             import inspect
             logging.error("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
-            return False
         
-        return self.getVal(name)    
+        return None        
+
+    
+    def setVal(self,thread_number,name,val,restart=True):
+        prev = self.getVal(thread_number, name)
+        if not prev == None and not prev == val:
+            # value differs, updating
+            try:
+                r = requests.get('%s%s/config/set' % (self.admin_url,thread_number),params={name:quote(val)},timeout=30)
+                if r.status_code == requests.codes.ok:
+                
+                    r = requests.get('%s%s/config/writeyes' % (self.admin_url,thread_number),timeout=30)
+                    if restart:
+                        r = requests.get('%s%s/action/restart' % (self.admin_url,thread_number),timeout=30)
+                    return val 
+                
+            except Exception,e:
+                import inspect
+                logging.error("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
+                
+        return None
+ 
     
     def restart(self):
         try:
@@ -70,23 +89,33 @@ class Server(models.Model):
     
     def checkSettings(self):
         # set default server settings
-        self.setVal('output_pictures','off')
+        self.setVal('0','output_pictures','off')
     
     @property  
     def cams(self):
-        try:
-            out = []
-            res = requests.get(self.admin_url).text.splitlines()[2:]
-            for r in res:
-                c = Cam.objects.get_or_create(server=self,thread_number=int(r.strip()))[0]
-                out.append(c)
-                if not c.name:
-                    c.save()
+        out = []
+        
+        r = None
+        for i in range(5):
+            try:
+                r = requests.get(self.admin_url,timeout=30)
+                if r:
+                    break
+            except:
+                sleep(5)
 
-            return out
-        except Exception,e:
-            import inspect
-            logging.error("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
+        if not r == None:
+            if r.status_code == requests.codes.ok:
+                res = r.text.splitlines()[2:]
+    
+                for r in res:
+                    c,created = Cam.objects.get_or_create(server=self,thread_number=int(r.strip()))
+                    if created:
+                        c.checksettings()
+                    if not c.name:
+                        c.save()
+                    out.append(c)
+                return out
         return []    
     
     
@@ -97,8 +126,10 @@ class Cam(models.Model):
     thread_number = models.IntegerField(null=True,blank=True)
     output_pictures = models.BooleanField(default=True)
     online = models.BooleanField(default=True)
+    last_event = models.DateTimeField(null=True,blank=True)
 
-    #class Meta:
+    class Meta:
+        managed=True
     #    app_label = 'motioncontrol'
 
     
@@ -106,33 +137,10 @@ class Cam(models.Model):
         return self.name    
     
     def getVal(self,name):
-        try:   
-            out = ""
-            res = requests.get('%s%s/config/get?query=%s' % (self.server.admin_url,self.thread_number,name)).text.splitlines()[0:-1]
-            for r in res:
-                out+=r.split(' = ')[1]
-                return out
-        except Exception,e:
-            import inspect
-            logging.error("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
-        return ""
+        return self.server.getVal(self.thread_number,name)
     
     def setVal(self,name,val,restart=True):
-        try:
-            if not val == self.getVal(name).strip():
-                res = requests.get(urljoin(self.server.admin_url,'/%s/config/set'%self.thread_number),params={name:val})
-                if res.text.splitlines()[-1] == 'Done':
-                    res = requests.get(urljoin(self.server.admin_url,'/%s/config/writeyes' % self.thread_number ))
-                    if res.text.splitlines()[-1] == 'Done':
-                        if restart:
-                            res = requests.get(urljoin(self.server.admin_url,'/%s/action/restart' % self.thread_number))
-
-        except Exception,e:
-            import inspect
-            logging.error("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
-            return False
-        
-        return self.getVal(name)
+        return self.server.setVal(self.thread_number,name,val,restart)
 
     def restart(self):
         try:
@@ -145,7 +153,6 @@ class Cam(models.Model):
         return res
 
     def checksettings(self):
-
         default_settings = [
             ['stream_port',"%s%03d"  % (48,int(self.thread_number))],
             ['stream_localhost',"off"],
@@ -160,15 +167,15 @@ class Cam(models.Model):
             ['output_pictures',"best" if self.output_pictures else "off"],
             ['on_picture_save','/etc/motion/on_event.py picture '+ self.slug +' %Y%m%d %H%M%S %v %t %f'],
             ['on_camera_lost','/etc/motion/on_event.py lost '+ self.slug +' %Y%m%d %H%M%S'],
-            #['on_motion_detected','/etc/motion/on_event.py motion '+ self.slug +' %Y%m%d %H%M%S'],
-            ['target_dir',os.path.join(self.server.remote_data_folder,slugify(self.name))]
+            ['on_motion_detected','/etc/motion/on_event.py motion '+ self.slug +' %Y%m%d %H%M%S'],
+            ['target_dir',os.path.join(self.server.local_data_folder,slugify(self.name))]
             ]
         
         for e in default_settings:
             try:
                 if not self.getVal(e[0]).strip() == e[1]:
                     logging.info('Updated %s --> %s' % (e[0],e[1]))
-                    self.setVal(e[0],e[1],False)     
+                    self.setVal(e[0],e[1],False)
             except:
                 logging.error('Error Updating  %s --> %s' % (e[0],e[1]))
         
@@ -271,15 +278,16 @@ def post_save_cam(sender, **kwargs):
     cam = kwargs.get('instance')
     logging.info("POST_SAVE : Job : %s" % cam.thread_number)
     # check number
-    lt = cam.getVal('text_left')
-    if not cam.name == lt.strip():
-        cam.name = lt.strip()
-        cam.save()
-        return
+    if not cam.name:
+        lt = cam.getVal('text_left')
+        if lt and not cam.name == lt:
+            cam.name = lt
+            cam.save()
+            return
 
     if not cam.slug == slugify("%s %s" % (cam.name,cam.thread_number)):
         cam.slug = slugify("%s %s" % (cam.name,cam.thread_number))
         cam.save()
         return
 
-    Thread(target=cam.checksettings).start()
+    #Thread(target=cam.checksettings).start()
