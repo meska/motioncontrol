@@ -47,7 +47,7 @@ class Server(models.Model):
             if r.status_code == requests.codes.ok:
                 # get only the first line atm
                 val = r.text.splitlines()[0].split("=")[1].strip() 
-                c = cache.set('motion-setting-%s-%s' % (thread_number,name),val,60)
+                c = cache.set('motion-setting-%s-%s' % (thread_number,name),val,600)
                 return val
 
         except Exception,e:
@@ -132,7 +132,21 @@ class Cam(models.Model):
         managed=True
     #    app_label = 'motioncontrol'
 
-    
+    @property
+    def is_online(self):
+        try:
+            r = requests.get(urljoin(self.server.admin_url,'/%s/detection/connection' % self.thread_number))
+            if r.status_code == requests.codes.ok:
+                ok = True if 'OK' in r.text else False
+                if not self.online == ok:
+                    self.online = ok
+                    self.online.save()
+                return ok
+        except:
+            # return last value on error
+            return self.online
+        
+        
     def __unicode__(self):
         return self.name    
     
@@ -141,7 +155,7 @@ class Cam(models.Model):
     
     def setVal(self,name,val,restart=True):
         return self.server.setVal(self.thread_number,name,val,restart)
-
+    
     def restart(self):
         try:
             res = requests.get(urljoin(self.server.admin_url,'/%s/action/restart' % self.thread_number))
@@ -183,7 +197,7 @@ class Cam(models.Model):
 
     def snapshot(self):
 
-        port = self.getVal('stream_port').strip()
+        port = self.getVal('stream_port')
         if not port:
             img = Image.open(os.path.join(os.path.split(__file__)[0],'static','disconnected.jpg')).resize([640,480])
             return img 

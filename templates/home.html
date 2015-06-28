@@ -11,11 +11,13 @@
   <div class="row">
 {% for server in servers %}
   {% for cam in server.cams %}
+  {% if cam.is_online %}
   <div class="col-md-3">
     <a href="{% url 'motioncontrol.views.showcam' cam.slug %}">
     <img class="camimage" id="{{cam.server.name}}_{{cam.thread_number}}" src="{% url 'motioncontrol.views.snapshot' cam.slug %}">
     </a>
   </div>
+  {% endif %}
   {% endfor %}
 {% endfor %}
   </div>
