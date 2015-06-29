@@ -22,30 +22,27 @@ def parseevent(data):
     try:
         if data[1] == "lost":
             cam = Cam.objects.get(slug=data[2])
-            cam.online = False
             cam.save()
 
         if data[1] == "motion":
             cam = Cam.objects.get(slug=data[2])
             cam.last_event = datetime.strptime("%s%s" % (data[3],data[4]),"%Y%m%d%H%M%S")
-            cam.online = True
             cam.save()     
             motion_alert.send(cam,data=data)
-            #for ua in cam.TelegramUserAlert_set.filter(receive_alerts=True):
-            #    ua.sendAlert(cam,data[1])            
+         
 
         if data[1] == "picture":
             cam = Cam.objects.get(slug=data[2])
-            cam.online = True
-            cam.save()      
-            
+            cam.last_event = datetime.strptime("%s%s" % (data[3],data[4]),"%Y%m%d%H%M%S")
+            cam.save()     
             event,created = Event.objects.get_or_create(cam=cam,datetime=datetime.strptime(data[3]+data[4],"%Y%m%d%H%M%S"),event_type=data[5],filename=os.path.split(data[7])[1])    
-            picture_alert.send(cam,data=event)
+            if created:
+                picture_alert.send(cam,data=event)
             #for ua in cam.TelegramUserAlert_set.filter(receive_alerts=True):
             #    ua.sendAlert(event,data[1])
             
-    except Exception,e:
-        print "mc ParseEvent Error: %s" % e
+    except Exception as e:
+        print("mc ParseEvent Error: %s" % e)
     
 
 def purge_old_pics():
@@ -70,7 +67,7 @@ def sync_cams():
             for c in s.cams:
                 logging.info('Syncin %s' % c)
                 c.checksettings()
-    except Exception,e:
+    except Exception as e:
         logging.error("%s-sync-cams Error: %s"% (__package__,e))
         
         

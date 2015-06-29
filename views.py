@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.conf import settings
 from base64 import b64decode,b64encode
 from PIL import Image
-import cStringIO
+from io import BytesIO
 import logging
 from datetime import datetime
 from django.core.cache import cache
@@ -25,7 +25,7 @@ def home(request):
 def showcam(request,cam_slug):
     try:
         cam = Cam.objects.get(slug=cam_slug)
-    except Exception,e:
+    except Exception as e:
         return HttpResponseRedirect(redirect_to="/"
                                     )
     return render(request,'cam.html',context={'cam':Cam.objects.get(slug=cam_slug)})
@@ -49,7 +49,7 @@ def event_pic(request,event_id):
 def snapshot(request,cam_slug):
     try:
         cam = Cam.objects.get(slug=cam_slug)
-    except Exception,e:
+    except Exception as e:
         return HttpResponse(b"",content_type='image/jpeg')
     
     img = cam.snapshot()
@@ -65,6 +65,6 @@ def snapshot(request,cam_slug):
 @csrf_exempt
 def webhook(request):
     from motioncontrol.signals import motion_event
-    motion_event.send(__name__,data=json.loads(request.body))
+    motion_event.send(__name__,data=json.loads(request.body.decode('utf8')))
     
     return HttpResponse()

@@ -7,12 +7,18 @@ class ConfigValueAdmin(admin.ModelAdmin):
     list_filter = ('cam__name',)
 
 class CamAdmin(admin.ModelAdmin):
-    list_display = ('slug','server', 'name', 'thread_number','output_pictures','online')
+    list_display = ('slug','server', 'name', 'thread_number','output_pictures','online','last_event')
     list_filter = ('server__name',)
 
+class EventAdmin(admin.ModelAdmin):
+    list_display = ('id','cam','datetime','filename')
+    #list_filter = ('server__name',)
 
-admin.site.register(Event)
+admin.site.register(Event,EventAdmin)
 admin.site.register(Cam,CamAdmin)
 admin.site.register(Server)
+admin.site.register(AlertSubscription)
+
+
 
 #admin.site.register(ConfigValue,ConfigValueAdmin)

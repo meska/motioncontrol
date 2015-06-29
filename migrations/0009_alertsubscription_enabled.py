@@ -7,13 +7,13 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('motioncontrol', '0001_initial'),
+        ('motioncontrol', '0008_auto_20150629_1721'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='cam',
-            name='last_event',
-            field=models.DateTimeField(null=True, blank=True),
+            model_name='alertsubscription',
+            name='enabled',
+            field=models.BooleanField(default=False),
         ),
     ]

@@ -18,8 +18,7 @@ class Migration(migrations.Migration):
                 ('slug', models.CharField(max_length=100, null=True, blank=True)),
                 ('thread_number', models.IntegerField(null=True, blank=True)),
                 ('output_pictures', models.BooleanField(default=True)),
-                ('online', models.BooleanField(default=True)),
-                ('lastmotion', models.DateTimeField(null=True, blank=True)),
+                ('online', models.BooleanField(default=True))
             ],
             options={
                 'managed': True,
