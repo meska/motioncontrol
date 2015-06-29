@@ -18,6 +18,12 @@ def parseevent(data):
     if not cache.get("%s-purge" % __package__):
         Thread(target=purge_old_pics).start()
         cache.set("%s-purge" % __package__,True,3600)    
+
+    if settings.MOTION_TELEGRAM_PLUGIN:
+        if not cache.get("%s-onpause" % __package__):
+            from motioncontrol.telegram.parser import check_onpause
+            Thread(target=check_onpause).start()
+            cache.set("%s-onpause" % __package__,True,600)  
     
     try:
         if data[1] == "lost":

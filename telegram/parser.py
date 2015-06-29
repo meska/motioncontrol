@@ -51,8 +51,6 @@ def check_onpause():
                 a.save()            
 
 
-                
-    Timer(60,check_onpause).start()
 
 class Parser():
     patterns = [
