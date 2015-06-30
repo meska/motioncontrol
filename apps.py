@@ -29,11 +29,8 @@ class MotionControlConfig(AppConfig):
                 Timer(10,pull_motion_event,args=[settings.MOTION_REDIS_CHANNEL,]).start()
             
             
-        #if settings.MOTION_TELEGRAM_PLUGIN:
-        #    import motioncontrol.telegram.connectors
-        #    from motioncontrol.telegram.parser import check_onpause
-        #    from threading import Timer
-        #    Timer(10,check_onpause).start()
+        if settings.MOTION_TELEGRAM_PLUGIN:
+            import motioncontrol.telegram.connectors
             
         import motioncontrol.signals
         import motioncontrol.connectors

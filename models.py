@@ -173,6 +173,10 @@ class Cam(models.Model):
         return res
 
     def checksettings(self):
+        
+        if not settings.MOTION_UPDATE_CAM_SETTINGS:
+            return 
+        
         default_settings = [
             ['stream_port',"%s%03d"  % (48,int(self.thread_number))],
             ['stream_localhost',"off"],
