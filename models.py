@@ -188,6 +188,8 @@ class Cam(models.Model):
             #['on_motion_detected',self.on_event_script + ' motion '+ self.slug +' %Y%m%d %H%M%S'],
             ['noise_level','32'],
             ['noise_tune','on'],          
+            ['threshold','1500'],
+            ['threshold_tune','on'],   
             ['on_camera_lost',''],
             ['on_motion_detected',''],            
             ['target_dir',os.path.join(self.server.local_data_folder,slugify(self.name))]
@@ -195,7 +197,9 @@ class Cam(models.Model):
         
         # if pause alert enabled
         if self.alertsubscription_set.filter(alert_nomotion=True,enabled=True).count() > 0:
-            default_settings.append(['noise_tune','off'])
+            default_settings.append(['threshold','500'])
+            default_settings.append(['threshold_tune','off'])
+            
         
         for e in default_settings:
             try:
