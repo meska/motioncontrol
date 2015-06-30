@@ -19,6 +19,7 @@ import re
 class Server(models.Model):
     name = models.CharField(max_length=100,unique=True)
     admin_url = models.CharField(max_length=200,unique=True,default='http://127.0.0.1:8000/')
+    stream_url = models.CharField(max_length=200,unique=True,default='http://127.0.0.1/',help_text='Stream base url, requires nginx configuration')
     local_config_folder = models.CharField(max_length=200,null=True,blank=True,help_text='On motion server')
     local_data_folder = models.CharField(max_length=200,null=True,blank=True,help_text='On motion server')
     remote_config_folder = models.CharField(max_length=200,null=True,blank=True,help_text='On Django server')
@@ -129,6 +130,7 @@ class Cam(models.Model):
     online = models.BooleanField(default=True)
     last_event = models.DateTimeField(null=True,blank=True)
     on_event_script = models.CharField(max_length=200,default='/etc/motion/on_event_webhook.py')
+    
 
     class Meta:
         managed=True
@@ -255,20 +257,8 @@ class Cam(models.Model):
             return img
         
     def streamurl(self):
-        if self.getVal('stream_port'):
-            port = self.getVal('stream_port').strip()
-            if not int(port):
-                self.save()
-                
-            if re.findall(':\d+',self.server.admin_url):
-                streamurl = re.sub(':\d+',':'+port,self.server.admin_url)
-            else:
-                streamurl = "%s:%s/" % (self.server.admin_url[0:-1],port)                
-
-            return streamurl
-        else:
-            # return disconnected url
-            return None   
+        # REQUIRES NGINX CONFIGURATION
+        return "%s%02d" % (self.server.stream_url,self.thread_number)
 
     def last_events(self):
         return self.event_set.all().order_by('-datetime')[0:20]

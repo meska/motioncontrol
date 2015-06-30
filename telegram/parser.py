@@ -242,7 +242,7 @@ class Parser():
             c.snapshot().save(fp,'JPEG')
             fp.seek(0)
             self.bot.sendPhoto(user.user_id,fp,reply_markup={'hide_keyboard':True})
-            self.bot.sendMessage(user.user_id,"Live stream: %s/stream/cam%02d" % (settings.TELEGRAM_WEBHOOK_URL,c.thread_number))
+            self.bot.sendMessage(user.user_id,"Live stream: %s%02d" % (c.server.stream_url,c.thread_number))
             
         except Exception as e:
             self.bot.sendMessage( user.user_id,"Error Retrieving Snapshot from %s" % args[0] ,reply_markup={'hide_keyboard':True} )
