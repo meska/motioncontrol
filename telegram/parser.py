@@ -3,10 +3,20 @@
   Author:  Marco Mescalchin --<>
   Purpose: incoming messages parser for telegram bot
   Created: 06/25/15
+
+# commandlist to use with @BotFather
+show - Visualizza cams
+alerts - Interfacia Alerts
+alert_status - Stato dei tuoi Alerts
+alert_onpause - Attiva alert su pausa
+alert_onmotion - Attiva alert su movimento
+
+
 """
 from io import BytesIO
 import re
 import requests
+from django.conf import settings
 
 EM_MOTION = '\U0001f3c3'
 EM_PAUSE = '\U0001f6b6'
@@ -232,6 +242,8 @@ class Parser():
             c.snapshot().save(fp,'JPEG')
             fp.seek(0)
             self.bot.sendPhoto(user.user_id,fp,reply_markup={'hide_keyboard':True})
+            self.bot.sendMessage(user.user_id,"Live stream: %s/stream/cam%02d" % (settings.TELEGRAM_WEBHOOK_URL,c.thread_number))
+            
         except Exception as e:
             self.bot.sendMessage( user.user_id,"Error Retrieving Snapshot from %s" % args[0] ,reply_markup={'hide_keyboard':True} )
 
