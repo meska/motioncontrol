@@ -197,8 +197,8 @@ class Cam(models.Model):
         
         # if pause alert enabled
         if self.alertsubscription_set.filter(alert_nomotion=True,enabled=True).count() > 0:
-            default_settings.append(['threshold','500'])
-            default_settings.append(['threshold_tune','off'])
+            default_settings.append(['threshold','100'])
+            #default_settings.append(['threshold_tune','off'])
             
         
         for e in default_settings:
