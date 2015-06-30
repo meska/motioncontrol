@@ -11,36 +11,38 @@ def check_onpause():
     # check for pause events
     from io import BytesIO
     from motioncontrol.models import AlertSubscription
-    for a in AlertSubscription.objects.filter(alert_nomotion=True,enabled=True,sent=False):
+    for a in AlertSubscription.objects.filter(alert_nomotion=True,enabled=True,sent=False,pause=False):
         mins = int((datetime.now() - a.cam.last_event).seconds / 60)
         if mins > 30:
             from telegrambot.wrapper import Bot
-            img = a.cam.snapshot()
-            if img:
-                b = Bot(settings.TELEGRAM_BOT_TOKEN)
-                fp = BytesIO()
-                img.save(fp,'JPEG')
-                fp.seek(0)            
-                b.sendPhoto(a.destination, fp, caption='pause alert %s' % a.cam.name)
-                b.sendMessage(a.destination,"Nessun movimento su %s" % a.cam.name)
-                a.sent = True
-                a.save()
+            b.sendMessage(a.destination,"Nessun movimento su /s_%s" % (a.cam.name.replace(' ','_')))
+            #img = a.cam.snapshot()
+            #if img:
+                #b = Bot(settings.TELEGRAM_BOT_TOKEN)
+                #fp = BytesIO()
+                #img.save(fp,'JPEG')
+                #fp.seek(0)            
+                #b.sendPhoto(a.destination, fp, caption='pause alert %s' % a.cam.name)
+                
+                #a.sent = True
+                #a.save()
 
     # check for resume            
-    for a in AlertSubscription.objects.filter(alert_nomotion=True,enabled=True,sent=True):
+    for a in AlertSubscription.objects.filter(alert_nomotion=True,enabled=True,sent=True,pause=False):
         mins = int((datetime.now() - a.cam.last_event).seconds / 60)
         if mins < 30:
             from telegrambot.wrapper import Bot
-            img = a.cam.snapshot()
-            if img:
-                b = Bot(settings.TELEGRAM_BOT_TOKEN)
-                fp = BytesIO()
-                img.save(fp,'JPEG')
-                fp.seek(0)            
-                b.sendPhoto(a.destination, fp, caption='resume alert %s' % a.cam.name)
-                b.sendMessage(a.destination,"Movimento ripristinato su %s" % a.cam.name)
-                a.sent = False
-                a.save()       
+            b.sendMessage(a.destination,"Movimento ripristinato su /s_%s" % (a.cam.name.replace(' ','_')))
+            #img = a.cam.snapshot()
+            #if img:
+                #b = Bot(settings.TELEGRAM_BOT_TOKEN)
+                #fp = BytesIO()
+                #img.save(fp,'JPEG')
+                #fp.seek(0)            
+                #b.sendPhoto(a.destination, fp, caption='resume alert %s' % a.cam.name)
+                
+                #a.sent = False
+                #a.save()       
 
 def parseevent(data):
     

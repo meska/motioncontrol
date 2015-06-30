@@ -9,7 +9,7 @@ from io import BytesIO
 def receive_picture_alert(sender, **kwargs):
     event=kwargs['data']
     from motioncontrol.models import AlertSubscription
-    als = AlertSubscription.objects.filter(cam=event.cam,enabled=True,alert_motion=True)
+    als = AlertSubscription.objects.filter(cam=event.cam,enabled=True,alert_motion=True,pause=False)
     for a in als:
         if a.channel == 'telegram':
             from telegrambot.wrapper import Bot

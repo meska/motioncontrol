@@ -246,7 +246,7 @@ class Cam(models.Model):
                 if a!=-1 and b!=-1:
                     jpg = data[a:b+2]
                     img = Image.open(BytesIO(jpg)).resize([640,480])
-                    c = cache.set('snap-%s-%s' % (self.server.id,self.id),img,timeout=10)
+                    c = cache.set('snap-%s-%s' % (self.server.id,self.id),img,timeout=5)
                     return img                
         
         except Exception as e:
@@ -287,6 +287,7 @@ class AlertSubscription(models.Model):
     alert_to = models.DateTimeField(null=True,blank=True)
     enabled = models.BooleanField(default=False)
     sent = models.BooleanField(default=False)
+    pause = models.BooleanField(default=False)
     
     def __unicode__(self):
         return u"%s %s" % (self.channel,self.destination)

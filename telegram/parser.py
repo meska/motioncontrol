@@ -6,12 +6,10 @@
 
 # commandlist to use with @BotFather
 show - Visualizza cams
-alerts - Interfacia Alerts
+alerts - Interfaccia Alerts
 alert_status - Stato dei tuoi Alerts
-alert_onpause - Attiva alert su pausa
-alert_onmotion - Attiva alert su movimento
-
-
+pause - Metti in pausa gli Alerts
+status - Camera Status
 """
 from io import BytesIO
 import re
@@ -30,13 +28,18 @@ class Parser():
         ['/show','show'],
         ['/gnocca','boobs'],
         ["(.*)\s+\U0001f4f7",'showcam'],   
-        ["/sc(\d+)",'showcam'], 
+        ["/sc(\d+)",'showcam'],
+        ["/s_(.*)",'showcam'],
         ["(.*)\s+([%s%s])\s([%s%s])" % (EM_ENABLE,EM_DISABLE,EM_MOTION,EM_PAUSE),'alert'],
         #["(.*)\s+",'alert'],
         ['/alerts','alerts'],
         ['/alert_status','alert_status'],
         ['/alert_onmotion','alert_onmotion'],
         ['/alert_onpause','alert_onpause'],
+        ['/pause','pause'],
+        ['/status','status'],
+        #['/stop','start'],
+        #['/start','stop'],
     ]    
     
     
@@ -120,19 +123,20 @@ class Parser():
         for c in Cam.objects.all():
             if c.name and c.online:
                 keys.append(u"%s \U0001f4f7" % c.name) 
-                funcs.append('/sc%s %s' % (c.id,c.name))
+                #funcs.append('/s_%s' % (c.name.replace(' ','_')))
      
         if keys:
-            self.bot.sendMessage(chat_id,"Seleziona una cam:\n%s" % "\n".join(funcs), reply_markup={'keyboard':self.split(keys,2)}  )# ,reply_to_message_id=message['message_id'])
+            #self.bot.sendMessage(chat_id,"Seleziona una cam:\n%s" % "\n".join(funcs), reply_markup={'keyboard':self.split(keys,2)}  )# ,reply_to_message_id=message['message_id'])
+            self.bot.sendMessage(chat_id,"Seleziona una cam:", reply_markup={'keyboard':self.split(keys,2)}  )# ,reply_to_message_id=message['message_id'])
         else:
-            self.bot.sendMessage(chat_id,"Nessuna camera online al momento")# ,reply_to_message_id=message['message_id'])
+            self.bot.sendMessage(chat_id,"Nessuna cam online al momento")# ,reply_to_message_id=message['message_id'])
         
         return        
     
     def alerts(self,message,chat_id,user):
         commands = [
             '/alert_status Stato dei tuoi Alerts',
-            '/alert_onpause Attiva alert su pausa',
+            '/alert_onpause Attiva alert su fermo',
             '/alert_onmotion Attiva alert su movimento'
         ]
         self.bot.sendMessage(chat_id,"Seleziona un opzione:\n%s" % "\n".join(commands))# ,reply_to_message_id=message['message_id'])
@@ -145,12 +149,45 @@ class Parser():
         alerts = []
         for a in alerts_sub:
             alerts.append(
-                "%s Attivo su %s" % (a.cam.name,"movimento" if a.alert_motion else 'pausa')
+                "%s: %s %s" % (a.cam.name,"Movimento" if a.alert_motion else 'Fermo','(in pausa)' if a.pause else '')
             )
         
         self.bot.sendMessage(chat_id,"Alerts Attivi:\n%s" % "\n".join(alerts))# ,reply_to_message_id=message['message_id'])
         user.last_message = message
         user.save()          
+
+    def status(self,message,chat_id,user):
+        from motioncontrol.models import Cam
+        cams = Cam.objects.all()
+        online = []
+        offline = []
+        for c in cams:
+            if c.online:
+                online.append(c.name)
+            else:
+                offline.append(c.name)
+        
+        self.bot.sendMessage(chat_id,"Sato Cams:\n\nOnline:\n%s\n\nOffline:\n%s" % ("\n".join(online),"\n".join(offline)))# ,reply_to_message_id=message['message_id'])
+        user.last_message = message
+        user.save()  
+        
+    def pause(self,message,chat_id,user):
+        from motioncontrol.models import AlertSubscription
+        alerts_sub = AlertSubscription.objects.filter(destination=chat_id,enabled=True)
+
+        pause = None
+        for a in alerts_sub:
+            if pause == None:
+                # the first rule the others
+                pause = False if a.pause else True
+
+            a.pause = pause
+            a.save()
+        
+        self.alert_status(message, chat_id, user)
+        #self.bot.sendMessage(chat_id,msg)
+        #user.last_message = message
+        #user.save()   
 
     def alert_onmotion(self,message,chat_id,user):
         self.bot.action_typing(chat_id)
@@ -237,12 +274,12 @@ class Parser():
             if args[0].isdecimal():
                 c = Cam.objects.get(id=int(args[0]))
             else:
-                c = Cam.objects.get(name=args[0])
+                c = Cam.objects.get(name=args[0].replace('_',' '))
             fp = BytesIO()
             c.snapshot().save(fp,'JPEG')
             fp.seek(0)
             self.bot.sendPhoto(user.user_id,fp,reply_markup={'hide_keyboard':True})
-            self.bot.sendMessage(user.user_id,"Live stream: %s%02d" % (c.server.stream_url,c.thread_number))
+            #self.bot.sendMessage(user.user_id,"Live stream: %s%02d" % (c.server.stream_url,c.thread_number))
             
         except Exception as e:
             self.bot.sendMessage( user.user_id,"Error Retrieving Snapshot from %s" % args[0] ,reply_markup={'hide_keyboard':True} )
