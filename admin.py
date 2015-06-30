@@ -14,10 +14,14 @@ class EventAdmin(admin.ModelAdmin):
     list_display = ('id','cam','datetime','filename')
     #list_filter = ('server__name',)
 
+class AlertSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('id','channel','destination','cam','alert_motion','alert_nomotion','enabled','sent')
+    list_filter = ('channel','destination')
+
 admin.site.register(Event,EventAdmin)
 admin.site.register(Cam,CamAdmin)
 admin.site.register(Server)
-admin.site.register(AlertSubscription)
+admin.site.register(AlertSubscription,AlertSubscriptionAdmin)
 
 
 
