@@ -6,50 +6,12 @@
 """
 from io import BytesIO
 import re
-import requests,json
-from threading import Thread,Timer
-from datetime import datetime,timedelta
-from django.conf import settings
-#from django.core.cache import cache
+import requests
 
 EM_MOTION = '\U0001f3c3'
 EM_PAUSE = '\U0001f6b6'
 EM_ENABLE = '\U0001f514'
 EM_DISABLE = '\U0001f515'
-
-
-def check_onpause():
-    # check for pause events
-    from motioncontrol.models import AlertSubscription,Cam
-    for a in AlertSubscription.objects.filter(alert_nomotion=True,enabled=True,sent=False):
-        mins = int((datetime.now() - a.cam.last_event).seconds / 60)
-        if mins > 30:
-            from telegrambot.wrapper import Bot
-            img = a.cam.snapshot()
-            if img:
-                b = Bot(settings.TELEGRAM_BOT_TOKEN)
-                fp = BytesIO()
-                img.save(fp,'JPEG')
-                fp.seek(0)            
-                b.sendPhoto(a.destination, fp, caption='pause alert %s' % a.cam.name)
-                a.sent = True
-                a.save()
-
-    # check for resume            
-    for a in AlertSubscription.objects.filter(alert_nomotion=True,enabled=True,sent=True):
-        mins = int((datetime.now() - a.cam.last_event).seconds / 60)
-        if mins < 30:
-            from telegrambot.wrapper import Bot
-            img = a.cam.snapshot()
-            if img:
-                b = Bot(settings.TELEGRAM_BOT_TOKEN)
-                fp = BytesIO()
-                img.save(fp,'JPEG')
-                fp.seek(0)            
-                b.sendPhoto(a.destination, fp, caption='resume alert %s' % a.cam.name)
-                a.sent = False
-                a.save()            
-
 
 
 class Parser():
@@ -270,8 +232,8 @@ class Parser():
             c.snapshot().save(fp,'JPEG')
             fp.seek(0)
             self.bot.sendPhoto(user.user_id,fp,reply_markup={'hide_keyboard':True})
-        except:
-            self.bot.sendMessage( user.user_id,"Error Retrieving Snapshot from %s" % text ,reply_markup={'hide_keyboard':True} )
+        except Exception as e:
+            self.bot.sendMessage( user.user_id,"Error Retrieving Snapshot from %s" % args[0] ,reply_markup={'hide_keyboard':True} )
 
     
     def parse(self,message):

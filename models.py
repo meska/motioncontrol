@@ -1,7 +1,6 @@
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.contrib import messages
 from io import BytesIO
 import requests
 from django.template.defaultfilters import slugify
@@ -10,9 +9,7 @@ from django.conf import settings
 from threading import Thread
 from PIL import Image
 from time import sleep
-import redis
-import logging,os,sys
-import json
+import logging,os
 import re
 #logger = logging.getLogger(__name__)
 
@@ -79,7 +76,7 @@ class Server(models.Model):
     
     def restart(self):
         try:
-            res = requests.get(self.server.admin_url + '0/action/restart') 
+            res = requests.get(self.admin_url + '0/action/restart') 
         except Exception as e:
             import inspect
             logging.error("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
@@ -143,7 +140,7 @@ class Cam(models.Model):
     def is_online(self):
         try:
             r = requests.get('%s%s/detection/connection' % (self.server.admin_url,self.thread_number))
-        except:
+        except Exception as e:
             # return last value on error
             return self.online
         

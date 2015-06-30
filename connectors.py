@@ -1,4 +1,4 @@
-from motioncontrol.signals import motion_event,picture_alert
+from motioncontrol.signals import motion_event
 from django.dispatch import receiver
 
 @receiver(motion_event)

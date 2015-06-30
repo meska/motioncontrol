@@ -1,13 +1,12 @@
 from django.apps import AppConfig
 from django.conf import settings
 from threading import Timer
-import sys
+import sys,redis,json
 
 
 def pull_motion_event(queuename):
     # pull motion events from redis and dispatch a signal 
-    import redis,json
-    out = []
+   
     r = redis.StrictRedis(host=settings.MOTION_REDIS_SERVER, port=6379, db=0)
     s = r.lpop(queuename)
     if s:
@@ -25,7 +24,6 @@ class MotionControlConfig(AppConfig):
         if 'runserver' in sys.argv:
             if settings.MOTION_REDIS_CHANNEL:
                 # enable redis poller for motion events
-                from threading import Timer
                 Timer(10,pull_motion_event,args=[settings.MOTION_REDIS_CHANNEL,]).start()
             
             
