@@ -171,9 +171,6 @@ class Cam(models.Model):
 
     def checksettings(self):
         
-        if not settings.MOTION_UPDATE_CAM_SETTINGS:
-            return 
-        
         default_settings = [
             ['stream_port',"%s%03d"  % (48,int(self.thread_number))],
             ['stream_localhost',"off"],
@@ -189,10 +186,16 @@ class Cam(models.Model):
             ['on_picture_save',self.on_event_script + ' picture '+ self.slug +' %Y%m%d %H%M%S %v %t %f'],
             #['on_camera_lost',self.on_event_script + ' lost '+ self.slug +' %Y%m%d %H%M%S'],
             #['on_motion_detected',self.on_event_script + ' motion '+ self.slug +' %Y%m%d %H%M%S'],
+            ['noise_level','32'],
+            ['noise_tune','on'],          
             ['on_camera_lost',''],
             ['on_motion_detected',''],            
             ['target_dir',os.path.join(self.server.local_data_folder,slugify(self.name))]
             ]
+        
+        # if pause alert enabled
+        if self.alertsubscription_set.filter(alert_nomotion=True,enabled=True).count() > 0:
+            default_settings.append(['noise_tune','off'])
         
         for e in default_settings:
             try:

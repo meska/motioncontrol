@@ -69,7 +69,18 @@ def cronhook(request):
       */5 * * * * curl -s http://yoursite.com/mc/cronhook/ > /dev/null 2>&1
     """
 
-    
+    # manual requests
+    do = request.GET.get('do')
+    if do == 'sync_cams':
+        from motioncontrol.tasks import sync_cams
+        sync_cams()
+    elif do == 'purge_old_pics':
+        from motioncontrol.tasks import purge_old_pics
+        purge_old_pics()
+    elif do =='check_onpause':
+        if settings.MOTION_TELEGRAM_PLUGIN:
+            from motioncontrol.tasks import check_onpause
+            check_onpause()        
     
     # sync cam settings every 10 minutes
     if not cache.get("%s-sync-cams" % __package__):
