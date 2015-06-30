@@ -68,3 +68,31 @@ def webhook(request):
     motion_event.send(__name__,data=json.loads(request.body.decode('utf8')))
     
     return HttpResponse()
+
+
+
+def cronhook(request):
+    """
+      simple cront management
+      put this on your crontab:
+      */5 * * * * curl -s http://yoursite.com/mc/cronhook/ > /dev/null 2>&1
+    """
+
+    # sync cam settings every 10 minutes
+    if not cache.get("%s-sync-cams" % __package__):
+        from motioncontrol.tasks import sync_cams
+        Thread(target=sync_cams).start()
+        cache.set("%s-sync-cams" % __package__,True,600)
+
+    if not cache.get("%s-purge" % __package__):
+        from motioncontrol.tasks import purge_old_pics
+        Thread(target=purge_old_pics).start()
+        cache.set("%s-purge" % __package__,True,3600)    
+
+    if settings.MOTION_TELEGRAM_PLUGIN:
+        if not cache.get("%s-onpause" % __package__):
+            from motioncontrol.telegram.parser import check_onpause
+            Thread(target=check_onpause).start()
+            cache.set("%s-onpause" % __package__,True,600)      
+    
+    
