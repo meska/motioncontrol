@@ -62,7 +62,7 @@ class Server(models.Model):
                 r = requests.get('%s%s/config/set' % (self.admin_url,thread_number),params={name:val},timeout=30)
                 if r.status_code == requests.codes.ok:
                 
-                    r = requests.get('%s%s/config/writeyes' % (self.admin_url,thread_number),timeout=30)
+                    r = requests.get('%s%s/config/write' % (self.admin_url,thread_number),timeout=30)
                     if restart:
                         r = requests.get('%s%s/action/restart' % (self.admin_url,thread_number),timeout=30)
                     return val 
@@ -196,8 +196,8 @@ class Cam(models.Model):
             ]
         
         # if pause alert enabled
-        if self.alertsubscription_set.filter(alert_nomotion=True,enabled=True).count() > 0:
-            default_settings.append(['threshold','100'])
+        #if self.alertsubscription_set.filter(alert_nomotion=True,enabled=True).count() > 0:
+            #default_settings.append(['threshold','100'])
             #default_settings.append(['threshold_tune','off'])
             
         
