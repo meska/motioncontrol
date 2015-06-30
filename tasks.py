@@ -15,6 +15,7 @@ def check_onpause():
         mins = int((datetime.now() - a.cam.last_event).seconds / 60)
         if mins > 30:
             from telegrambot.wrapper import Bot
+            b = Bot(settings.TELEGRAM_BOT_TOKEN)
             b.sendMessage(a.destination,"Nessun movimento su /s_%s" % (a.cam.name.replace(' ','_')))
             #img = a.cam.snapshot()
             #if img:
@@ -32,6 +33,7 @@ def check_onpause():
         mins = int((datetime.now() - a.cam.last_event).seconds / 60)
         if mins < 30:
             from telegrambot.wrapper import Bot
+            b = Bot(settings.TELEGRAM_BOT_TOKEN)
             b.sendMessage(a.destination,"Movimento ripristinato su /s_%s" % (a.cam.name.replace(' ','_')))
             #img = a.cam.snapshot()
             #if img:
