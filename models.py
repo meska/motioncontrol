@@ -46,10 +46,13 @@ class Server(models.Model):
                 val = r.text.splitlines()[0].split("=")[1].strip() 
                 c = cache.set('motion-setting-%s-%s' % (thread_number,name),val,600)
                 return val
+            else:
+                import inspect
+                logging.error("%s:%s:%s" % (inspect.currentframe().f_back.f_code.co_name,name,r))
 
         except Exception as e:
             import inspect
-            logging.error("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
+            logging.error("%s:%s:%s" % (inspect.currentframe().f_back.f_code.co_name,name,e))
         
         return None        
 
@@ -63,6 +66,7 @@ class Server(models.Model):
                 if r.status_code == requests.codes.ok:
                 
                     r = requests.get('%s%s/config/write' % (self.admin_url,thread_number),timeout=30)
+                    sleep(1)
                     if restart:
                         r = requests.get('%s%s/action/restart' % (self.admin_url,thread_number),timeout=30)
                     return val 
@@ -177,6 +181,8 @@ class Cam(models.Model):
             ['stream_motion',"on"],
             ['netcam_tolerant_check',"on"],
             ['netcam_keepalive',"off"],
+            ['width',"640"],
+            ['height',"480"],
             #['threshold',"1500"],
             #['threshold_tune',"on"],
             ['minimum_motion_frames',"3"],

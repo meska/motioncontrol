@@ -22,6 +22,7 @@ def check_onpause():
                 img.save(fp,'JPEG')
                 fp.seek(0)            
                 b.sendPhoto(a.destination, fp, caption='pause alert %s' % a.cam.name)
+                b.sendMessage(a.destination,"Nessun movimento su %s" % a.cam.name)
                 a.sent = True
                 a.save()
 
@@ -37,6 +38,7 @@ def check_onpause():
                 img.save(fp,'JPEG')
                 fp.seek(0)            
                 b.sendPhoto(a.destination, fp, caption='resume alert %s' % a.cam.name)
+                b.sendMessage(a.destination,"Movimento ripristinato su %s" % a.cam.name)
                 a.sent = False
                 a.save()       
 
@@ -71,13 +73,13 @@ def parseevent(data):
 def purge_old_pics():
     # cleanup old pictures
     for e in Event.objects.filter(datetime__lt=datetime.now()-timedelta(days=30))[0:100]:
-        filename = os.path.join( e.cam.server.local_data_folder,os.path.split(e.cam.getVal('target_dir').strip())[1],e.filename)        
+        filename = os.path.join( e.cam.server.remote_data_folder,os.path.split(e.cam.getVal('target_dir').strip())[1],e.filename)        
         os.unlink(filename)
         e.delete()
         logging.info('%s deleted' % filename)
     # cleanup orphans
     for e in Event.objects.all():
-        filename = os.path.join( e.cam.server.local_data_folder,os.path.split(e.cam.getVal('target_dir').strip())[1],e.filename)  
+        filename = os.path.join( e.cam.server.remote_data_folder,os.path.split(e.cam.getVal('target_dir').strip())[1],e.filename)  
         if not os.path.exists(filename):
             e.delete()
             logging.info('%s deleted' % e)

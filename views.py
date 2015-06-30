@@ -60,8 +60,12 @@ def webhook(request):
     
     return HttpResponse()
 
+@csrf_exempt
+def ifttthook(request,user,cmd):
+    
+    return HttpResponse()
 
-
+@csrf_exempt
 def cronhook(request):
     """
       simple cront management, 

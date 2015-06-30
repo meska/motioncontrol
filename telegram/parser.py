@@ -123,7 +123,7 @@ class Parser():
         commands = [
             '/alert_status Stato dei tuoi Alerts',
             '/alert_onpause Attiva alert su pausa',
-            '/alert_onmotion Attiva alert su movimento',
+            '/alert_onmotion Attiva alert su movimento'
         ]
         self.bot.sendMessage(chat_id,"Seleziona un opzione:\n%s" % "\n".join(commands))# ,reply_to_message_id=message['message_id'])
         user.last_message = message
