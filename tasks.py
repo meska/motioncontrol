@@ -95,6 +95,6 @@ def sync_cams():
                 logging.info('Syncin %s' % c)
                 c.checksettings()
     except Exception as e:
-        logging.error("%s-sync-cams Error: %s"% (__package__,e))
+        print("%s-sync-cams Error: %s"% (__package__,e))
         
         

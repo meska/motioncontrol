@@ -49,11 +49,11 @@ class Server(models.Model):
                 return val
             else:
                 import inspect
-                logging.error("%s:%s:%s" % (inspect.currentframe().f_back.f_code.co_name,name,r))
+                print("%s:%s:%s" % (inspect.currentframe().f_back.f_code.co_name,name,r))
 
         except Exception as e:
             import inspect
-            logging.error("%s:%s:%s" % (inspect.currentframe().f_back.f_code.co_name,name,e))
+            print("%s:%s:%s" % (inspect.currentframe().f_back.f_code.co_name,name,e))
         
         return None        
 
@@ -74,7 +74,7 @@ class Server(models.Model):
                 
             except Exception as e:
                 import inspect
-                logging.error("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
+                print("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
                 
         return None
  
@@ -84,7 +84,7 @@ class Server(models.Model):
             res = requests.get(self.admin_url + '0/action/restart') 
         except Exception as e:
             import inspect
-            logging.error("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
+            print("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
             return False
 
         return res
@@ -170,7 +170,7 @@ class Cam(models.Model):
             res = requests.get('%s/%s/action/restart' % (self.server.admin_url,self.thread_number))
         except Exception as e:
             import inspect
-            logging.error("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
+            print("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
             return False
         
         return res
@@ -215,7 +215,7 @@ class Cam(models.Model):
                     logging.info('Updated %s --> %s' % (e[0],e[1]))
                     self.setVal(e[0],e[1],False)
             except:
-                logging.error('Error Updating  %s --> %s' % (e[0],e[1]))
+                print('Error Updating  %s --> %s' % (e[0],e[1]))
         
         self.restart()
 
@@ -251,7 +251,7 @@ class Cam(models.Model):
         
         except Exception as e:
             import inspect
-            logging.error("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
+            print("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
 
             img = Image.open(os.path.join(os.path.split(__file__)[0],'static','disconnected.jpg')).resize([640,480])
             return img
@@ -324,7 +324,7 @@ class Event(models.Model):
                 return None
         except Exception as e:
             import inspect
-            logging.error("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
+            print("%s:%s" % (inspect.currentframe().f_back.f_code.co_name,e))
             return None
         
 @receiver(post_save, sender=Server)
