@@ -28,14 +28,12 @@ class Parser():
     patterns = [
         ['/help','help'],
         ['/start','start'],
-        ['/help','help'],
         ['/show','show'],
         ['/gnocca','boobs'],
         ["(.*)\s+\U0001f4f7",'showcam'],   
         ["/sc(\d+)",'showcam'],
         ["/s_(.*)",'showcam'],
         ["(.*)\s+([%s%s])\s([%s%s])" % (EM_ENABLE,EM_DISABLE,EM_MOTION,EM_PAUSE),'alert'],
-        #["(.*)\s+",'alert'],
         ['/alerts','alerts'],
         ['/alert_status','alert_status'],
         ['/alert_onmotion','alert_onmotion'],
@@ -45,7 +43,6 @@ class Parser():
         ['/ifttt_single','ifttt_single'],
         ['/ifttt','ifttt'],
         #['/stop','start'],
-        #['/start','stop'],
     ]    
     
     
@@ -89,7 +86,7 @@ class Parser():
         return arrs    
     
     def start(self,message,chat_id,user):
-        self.bot.sendMessage(u.user_id,"Welcome to MotionBot")
+        self.bot.sendMessage(user.user_id,"Welcome to MotionBot")
         
     def help(self,message,chat_id,user):
 
@@ -101,7 +98,8 @@ class Parser():
         help_text+= "/pause - Metti in pausa o riattiva tutti gli alerts impostati\n"
         help_text+= "/status - Riepilogo cams\n"
         help_text+= "/ifttt - Istruzioni per configurate ifttt\n"
-        
+
+        self.bot.sendMessage(user.user_id,help_text)
         
     
     def ifttt(self,message,chat_id,user):
