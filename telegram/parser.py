@@ -10,6 +10,7 @@ alerts - Interfaccia Alerts
 alert_status - Stato dei tuoi Alerts
 pause - Metti in pausa gli Alerts
 status - Camera Status
+ifttt - Setup Ifttt
 """
 from io import BytesIO
 import re
@@ -25,6 +26,8 @@ EM_DISABLE = '\U0001f515'
 
 class Parser():
     patterns = [
+        ['/help','help'],
+        ['/start','start'],
         ['/help','help'],
         ['/show','show'],
         ['/gnocca','boobs'],
@@ -72,8 +75,8 @@ class Parser():
         if save:
             u.save()
             
-        if created:
-            self.bot.sendMessage(u.user_id,"Welcome to MotionBot") #,reply_to_message_id=message['message_id'])
+        #if created:
+        #    self.bot.sendMessage(u.user_id,"Welcome to MotionBot") #,reply_to_message_id=message['message_id'])
         return u
     
     def split(self,arr, size):
@@ -84,6 +87,22 @@ class Parser():
             arr   = arr[size:]
         arrs.append(arr)
         return arrs    
+    
+    def start(self,message,chat_id,user):
+        self.bot.sendMessage(u.user_id,"Welcome to MotionBot")
+        
+    def help(self,message,chat_id,user):
+
+        help_text= "Comandi Principali:\n"
+        help_text+= "/show - Visualizza una pulsantiera con le cams attive, cliccando il pulsante dedicato viene inviata un immagine con l'ultimo fotogramma\n\n"
+
+        help_text+= "/alerts - Visualizza la gestione degli alerts\n"
+        help_text+= "/alert_status - Visualizza lo stato degli alerts attivati\n"
+        help_text+= "/pause - Metti in pausa o riattiva tutti gli alerts impostati\n"
+        help_text+= "/status - Riepilogo cams\n"
+        help_text+= "/ifttt - Istruzioni per configurate ifttt\n"
+        
+        
     
     def ifttt(self,message,chat_id,user):
         # ifttt instructions
@@ -137,11 +156,7 @@ class Parser():
         self.bot.sendPhoto(chat_id,fp)             
 
 
-    def help(self,message,chat_id,user):
-        self.bot.action_typing(chat_id)
-        self.bot.sendMessage(chat_id,"TODO: Testo help" ) # ,reply_to_message_id=message['message_id'])
-        return        
-    
+   
     
     def show(self,message,chat_id,user):
         self.bot.action_typing(chat_id)
