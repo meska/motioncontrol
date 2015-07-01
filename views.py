@@ -61,8 +61,52 @@ def webhook(request):
     return HttpResponse()
 
 @csrf_exempt
-def ifttthook(request,user,cmd):
+def ifttthook(request,user_id,cmd,param):
+    if not settings.MOTION_TELEGRAM_PLUGIN:
+        return HttpResponse('telegram plugin disabled')
     
+    from telegrambot.models import TelegramUser
+    from telegrambot.wrapper import Bot
+    from motioncontrol.telegram.parser import Parser
+    from motioncontrol.models import AlertSubscription
+
+    try:
+        user = TelegramUser.objects.get(user_id=user_id)
+        bot = Bot(settings.TELEGRAM_BOT_TOKEN)
+
+        if cmd == 'pause' and param == 'all':
+            for a in AlertSubscription.objects.filter(destination=user.user_id,enabled=True):
+                a.pause = True
+                a.save()
+            bot.sendMessage(user.user_id,"Alerts disattivati via ifttt")
+            
+        if cmd == 'unpause' and param == 'all':
+            for a in AlertSubscription.objects.filter(destination=user.user_id,enabled=True):
+                a.pause = False
+                a.save()
+            bot.sendMessage(user.user_id,"Alerts attivati via ifttt")
+
+        if param.isdigit():
+            c = Cam.objects.get(id=int(param))
+            alert,created = AlertSubscription.objects.get_or_create(
+                channel = 'telegram',
+                destination = user.user_id,
+                cam = c,
+                alert_motion = True if cmd.endswith('motion') else False,
+                alert_nomotion = True if cmd.endswith('pause') else False,
+                enabled = True if cmd.startswith('on') else False,
+                pause = False
+            )            
+        
+            bot.sendMessage(user.user_id,"%s alert on %s %s via ifttt" % ( 
+                'Motion' if cmd.endswith('motion') else 'Pause',
+                c.name,
+                'enabled' if cmd.startswith('on') else 'disabled'
+            ))
+        
+    except:
+        # not writing any errors for tinkerers
+        pass
     return HttpResponse()
 
 @csrf_exempt

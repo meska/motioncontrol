@@ -17,6 +17,8 @@ def check_onpause():
             from telegrambot.wrapper import Bot
             b = Bot(settings.TELEGRAM_BOT_TOKEN)
             b.sendMessage(a.destination,"Nessun movimento su /s_%s" % (a.cam.name.replace(' ','_')))
+            a.sent = True
+            a.save()            
             #img = a.cam.snapshot()
             #if img:
                 #b = Bot(settings.TELEGRAM_BOT_TOKEN)
@@ -35,6 +37,8 @@ def check_onpause():
             from telegrambot.wrapper import Bot
             b = Bot(settings.TELEGRAM_BOT_TOKEN)
             b.sendMessage(a.destination,"Movimento ripristinato su /s_%s" % (a.cam.name.replace(' ','_')))
+            a.sent = False
+            a.save()               
             #img = a.cam.snapshot()
             #if img:
                 #b = Bot(settings.TELEGRAM_BOT_TOKEN)

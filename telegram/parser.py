@@ -15,6 +15,7 @@ from io import BytesIO
 import re
 import requests
 from django.conf import settings
+from django.core.urlresolvers import reverse
 
 EM_MOTION = '\U0001f3c3'
 EM_PAUSE = '\U0001f6b6'
@@ -38,6 +39,8 @@ class Parser():
         ['/alert_onpause','alert_onpause'],
         ['/pause','pause'],
         ['/status','status'],
+        ['/ifttt_single','ifttt_single'],
+        ['/ifttt','ifttt'],
         #['/stop','start'],
         #['/start','stop'],
     ]    
@@ -81,7 +84,33 @@ class Parser():
             arr   = arr[size:]
         arrs.append(arr)
         return arrs    
+    
+    def ifttt(self,message,chat_id,user):
+        # ifttt instructions
+        text = "È possibile attivare e disattivare le cam utilizzando ifttt:\n"
+        text+= "Su action scegliere l'opzione Maker e impostare un url a scelta tra quelli proposti di seguito, quindi su method selezionare GET, il resto può rimanere vuoto\n\n"
 
+        text+= "Tutti gli avvisi:\n"
+        text+= "Attiva:%s%s\n" % (settings.TELEGRAM_WEBHOOK_URL,reverse('motioncontrol.views.ifttthook',args=[user.user_id,'unpause','all'] ))
+        text+= "Disattiva: %s%s\n" % (settings.TELEGRAM_WEBHOOK_URL,reverse('motioncontrol.views.ifttthook',args=[user.user_id,'pause','all'] ))
+        text+= "\n"
+        text+= "Per gli avvisi su singola Cam: digitare /ifttt_single"
+            
+        
+        self.bot.sendMessage(user.user_id,text)
+
+    def ifttt_single(self,message,chat_id,user):
+        # ifttt instructions
+        from motioncontrol.models import Cam
+        text = "Avviso su singola Cam:\n"
+        for c in Cam.objects.filter(online=True):
+            text+= "Avvisa su movimento  %s:\n%s%s\n" % (c.name,settings.TELEGRAM_WEBHOOK_URL,reverse('motioncontrol.views.ifttthook',args=[user.user_id,'onmotion',c.id] ))
+            text+= "Disattiva su movimento  %s:\n%s%s\n" % (c.name,settings.TELEGRAM_WEBHOOK_URL,reverse('motioncontrol.views.ifttthook',args=[user.user_id,'offmotion',c.id] ))
+            text+= "Attiva su pausa %s:\n%s%s\n" % (c.name,settings.TELEGRAM_WEBHOOK_URL,reverse('motioncontrol.views.ifttthook',args=[user.user_id,'onpause',c.id] ))
+            text+= "Disattiva su pausa %s:\n%s%s\n\n" % (c.name,settings.TELEGRAM_WEBHOOK_URL,reverse('motioncontrol.views.ifttthook',args=[user.user_id,'offpause',c.id] ))
+            
+        
+        self.bot.sendMessage(user.user_id,text)
 
     def boobs(self,message,chat_id,user):
         # just for fun
@@ -120,10 +149,9 @@ class Parser():
         from motioncontrol.models import Cam
         keys = []
         funcs = []
-        for c in Cam.objects.all():
-            if c.name and c.online:
-                keys.append(u"%s \U0001f4f7" % c.name) 
-                #funcs.append('/s_%s' % (c.name.replace(' ','_')))
+        for c in Cam.objects.filter(online=True):
+            keys.append(u"%s \U0001f4f7" % c.name) 
+            #funcs.append('/s_%s' % (c.name.replace(' ','_')))
      
         if keys:
             #self.bot.sendMessage(chat_id,"Seleziona una cam:\n%s" % "\n".join(funcs), reply_markup={'keyboard':self.split(keys,2)}  )# ,reply_to_message_id=message['message_id'])
@@ -185,9 +213,7 @@ class Parser():
             a.save()
         
         self.alert_status(message, chat_id, user)
-        #self.bot.sendMessage(chat_id,msg)
-        #user.last_message = message
-        #user.save()   
+
 
     def alert_onmotion(self,message,chat_id,user):
         self.bot.action_typing(chat_id)
