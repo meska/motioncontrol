@@ -18,4 +18,4 @@ block content
             .container-fluid
                 for l in cam.last_events
                     .col-md-3
-                        img.evimage(src={% url 'motioncontrol.views.event_pic' l.id  %})
+                        img.evimage(src="{% url 'motioncontrol.views.event_pic' l.id  %}")
