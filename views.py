@@ -1,4 +1,4 @@
-from django.shortcuts import render,HttpResponse,HttpResponseRedirect
+from django.shortcuts import render,HttpResponse,HttpResponseRedirect,get_object_or_404
 from django.conf import settings
 from django.core.cache import cache
 from threading import Thread
@@ -16,7 +16,7 @@ def home(request):
 
 @login_required
 def showcam(request,cam_slug):
-    cam = Cam.objects.get(slug=cam_slug)
+    cam = get_object_or_404(Cam,slug=cam_slug)
     return render(request,'cam.jade',context={'cam':cam})
 
     
