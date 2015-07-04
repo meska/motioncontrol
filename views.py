@@ -53,7 +53,17 @@ def snapshot(request,cam_slug):
     else:
         return HttpResponse()
     
-
+@csrf_exempt
+def api(request):
+    if request.POST.get('cam_id') and request.POST.get('cmd') == 'setup_mode':
+        c = Cam.objects.get(id=request.POST.get('cam_id'))
+        if request.POST.get('val') == 'true':
+            c.setVal('setup_mode','on')
+        else:
+            c.setVal('setup_mode','off')
+            
+        return HttpResponse("ok")
+    return HttpResponse('response')
 
 @csrf_exempt
 def webhook(request):
