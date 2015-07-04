@@ -16,11 +16,9 @@ def home(request):
 
 @login_required
 def showcam(request,cam_slug):
-    try:
-        cam = Cam.objects.get(slug=cam_slug)
-        return render(request,'cam.jade',context={'cam':cam})
-    except Exception as e:
-        return HttpResponseRedirect(redirect_to="/")
+    cam = Cam.objects.get(slug=cam_slug)
+    return render(request,'cam.jade',context={'cam':cam})
+
     
     
 @login_required    
