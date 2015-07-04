@@ -13,8 +13,10 @@ block content
     .container-fluid
         .col-md-4
             img.camimage(src=cam.streamurl())
-            input-group
-                input.cam_setup(cam_id=cam.id, type='checkbox') Setup Mode
+            .checkbox
+                label
+                    input.cam_setup(cam_id=cam.id, type='checkbox') 
+                    | Setup Mode
         .col-md-8
             .container-fluid
                 for l in cam.last_events
@@ -24,12 +26,28 @@ block content
 
 block js 
     script.
+
+        function reloadStream() {
+            src = $('.camimage').attr('src');
+            if (src) {
+                $('.camimage').attr('src',src.split("&")[0] + "&ts=" + (Date.now() / 1000 | 0)).fadeIn();
+            }
+        }
+
+
+
         $(function(){
+
+            setInterval(function(){
+                reloadStream();
+                },30*1000);
+
             $(".cam_setup").on('click',function(e){
                 var cam_id = parseInt(e.currentTarget.getAttribute('cam_id'));
                 var val = e.currentTarget.checked;
-                $.post("{% url 'motioncontrol.views.api'%}",{'cam_id':cam_id,'cmd':'setup_mode','val':val},function(data){
+                $.post("{% url 'motioncontrol.views.cam_api'%}",{'cam_id':cam_id,'cmd':'setup_mode','val':val},function(data){
                     console.log(data);
+                    setTimeout(function(){reloadStream();},5*1000);   
                     });
                 });
             });

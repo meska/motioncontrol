@@ -34,10 +34,10 @@ class Server(models.Model):
     def __unicode__(self):
         return self.name
     
-    def getVal(self,thread_number,name):
+    def getVal(self,thread_number,name,cached=True):
         # get values from motioncontrol server with retry
         c = cache.get('motion-setting-%s-%s' % (thread_number,name))
-        if c:
+        if c and cached:
             return c 
 
         try:
@@ -58,8 +58,8 @@ class Server(models.Model):
         return None        
 
     
-    def setVal(self,thread_number,name,val,restart=True):
-        prev = self.getVal(thread_number, name)
+    def setVal(self,thread_number,name,val,restart=True,cached=True):
+        prev = self.getVal(thread_number, name,cached)
         if not prev == None and not prev == val:
             # value differs, updating
             try:
@@ -159,11 +159,11 @@ class Cam(models.Model):
         else:
             return self.online
     
-    def getVal(self,name):
-        return self.server.getVal(self.thread_number,name)
+    def getVal(self,name,cached=True):
+        return self.server.getVal(self.thread_number,name,cached)
     
-    def setVal(self,name,val,restart=True):
-        return self.server.setVal(self.thread_number,name,val,restart)
+    def setVal(self,name,val,restart=True,cached=True):
+        return self.server.setVal(self.thread_number,name,val,restart,cached)
     
     def restart(self):
         try:
