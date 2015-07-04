@@ -4,29 +4,32 @@ from django.core.cache import cache
 from threading import Thread
 import json
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 
 from motioncontrol.models import Server,Cam,Event
 
 PORT_PREFIX = '48'
 
-
+@login_required
 def home(request):
-    return render(request,'home.html',context={'servers':Server.objects.all()})
+    return render(request,'home.jade',context={'servers':Server.objects.all()})
 
+@login_required
 def showcam(request,cam_slug):
     try:
         cam = Cam.objects.get(slug=cam_slug)
-        return render(request,'cam.html',context={'cam':cam})
+        return render(request,'cam.jade',context={'cam':cam})
     except Exception as e:
         return HttpResponseRedirect(redirect_to="/")
     
     
-    
+@login_required    
 def events(request,cam_slug):
     # return image events
     cam = Cam.objects.get(slug=cam_slug)
     return HttpResponse(content=json.dumps(cam.last_events),content_type="text/json")
 
+@login_required
 def event_pic(request,event_id):
     e = Event.objects.get(id=event_id)
     img = e.img()
@@ -37,6 +40,7 @@ def event_pic(request,event_id):
     else:
         return HttpResponse(content=b'')
 
+@login_required
 def snapshot(request,cam_slug):
     try:
         cam = Cam.objects.get(slug=cam_slug)

@@ -1,0 +1,21 @@
+extends base.jade
+
+block css 
+    style.
+        .evimage {
+          width:100%;
+          height:100%;
+        }
+        .camimage {
+          width:100%;
+        }
+
+block content
+    .container-fluid
+        .col-md-4
+            img.camimage(src=cam.streamurl())
+        .col-md-8
+            .container-fluid
+                for l in cam.last_events
+                    .col-md-3
+                        img.evimage(src={% url 'motioncontrol.views.event_pic' l.id  %})

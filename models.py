@@ -260,6 +260,7 @@ class Cam(models.Model):
         # REQUIRES NGINX CONFIGURATION
         return "%s%02d" % (self.server.stream_url,self.thread_number)
 
+    @property
     def last_events(self):
         return self.event_set.all().order_by('-datetime')[0:20]
         
