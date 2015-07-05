@@ -19,10 +19,10 @@ if sys.argv[1] == 'picture':
 
 if sys.argv[1] == 'motion':
     r = redis.StrictRedis(host=REDIS_SERVER, port=6379, db=0)
-    r.rpush('motion-event',json.dumps(sys.argv))
+    r.set('motion-event-%s' % sys.argv[2],json.dumps(sys.argv))
 
-if sys.argv[1] == 'picture-redis':
-    r = redis.StrictRedis(host=REDIS_SERVER, port=6379, db=0)
-    r.set('motion-moving-%s'%sys.arg[1], True, ex=60)
-    r.rpush('motion-event',json.dumps(sys.argv))
+#if sys.argv[1] == 'picture-redis':
+#    r = redis.StrictRedis(host=REDIS_SERVER, port=6379, db=0)
+#    r.set('motion-moving-%s'%sys.arg[1], True, ex=60)
+#    r.set('motion-event',json.dumps(sys.argv))
 
