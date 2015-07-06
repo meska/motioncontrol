@@ -81,6 +81,11 @@ def parseevent(data):
 def purge_old_pics():
 
 
+    #cleanup orphans files
+    #for c in Cam.objects.all():
+    #    print(c.getVal('target_dir').strip())
+
+
     # cleanup old pictures, date depend from threshold
     
     for e in Event.objects.filter(datetime__lt=datetime.now()-timedelta(days=2),cam__threshold__lte=1000):
@@ -89,7 +94,9 @@ def purge_old_pics():
             try:
                 os.unlink(filename)
                 e.delete()
-            logging.info('%s deleted' % filename)    
+                logging.info('%s deleted' % filename)    
+            except:
+                pass
     
     for e in Event.objects.filter(datetime__lt=datetime.now()-timedelta(days=15),cam__threshold__gt=1000):
         filename = os.path.join( e.cam.server.remote_data_folder,os.path.split(e.cam.getVal('target_dir').strip())[1],e.filename)        
@@ -105,9 +112,6 @@ def purge_old_pics():
             e.delete()
             logging.info('%s deleted' % e)
     
-    # cleanup orphans files
-    #for c in Cam.objects.all():
-    #    print(e.cam.getVal('target_dir').strip())
             
     
 def sync_cams():
