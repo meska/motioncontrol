@@ -197,7 +197,7 @@ class Cam(models.Model):
             ['on_motion_detected',self.on_event_script + ' motion '+ self.slug +' %D %Y%m%d %H%M%S'],
             ['noise_level','32'],
             ['noise_tune','on'],          
-            ['threshold',str(cam.threshold)],
+            ['threshold',str(self.threshold)],
             ['threshold_tune','on'],   
             ['on_camera_lost',''],
             ['target_dir',os.path.join(self.server.local_data_folder,slugify(self.name))],
@@ -211,12 +211,9 @@ class Cam(models.Model):
             
         
         for e in default_settings:
-            try:
-                if not self.getVal(e[0]).strip() == e[1]:
-                    logging.info('Updated %s --> %s' % (e[0],e[1]))
-                    self.setVal(e[0],e[1],False)
-            except:
-                print('Error Updating  %s --> %s' % (e[0],e[1]))
+            if not self.getVal(e[0]).strip() == e[1]:
+                logging.info('Updated %s --> %s' % (e[0],e[1]))
+                self.setVal(e[0],e[1],False)
         
         self.restart()
 

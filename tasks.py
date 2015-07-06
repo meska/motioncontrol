@@ -116,12 +116,6 @@ def purge_old_pics():
     
 def sync_cams():
     # sync cams
-    try:
-        for s in Server.objects.all():
-            for c in s.cams:
-                logging.info('Syncin %s' % c)
-                c.checksettings()
-    except Exception as e:
-        print("%s-sync-cams Error: %s"% (__package__,e))
-        
-        
+    for s in Server.objects.all():
+        for c in s.cams:
+            c.checksettings()        
