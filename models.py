@@ -200,7 +200,8 @@ class Cam(models.Model):
             ['threshold_tune','on'],   
             ['on_camera_lost',''],
             ['on_motion_detected',''],            
-            ['target_dir',os.path.join(self.server.local_data_folder,slugify(self.name))]
+            ['target_dir',os.path.join(self.server.local_data_folder,slugify(self.name))],
+            ['text_right','%Y-%m-%d\n%T\nD:%D']
             ]
         
         # if pause alert enabled
