@@ -65,10 +65,13 @@ def cam_api(request):
     if request.POST.get('cam_id') and request.POST.get('cmd') == 'moving':
         c = Cam.objects.get(id=request.POST.get('cam_id'))
         r = redis.StrictRedis(host=settings.MOTION_REDIS_SERVER, port=6379, db=0)
-        if r.get('motion-event-%s' % c.slug):
-            return HttpResponse('yes')
+        res = r.get('motion-event-%s' % c.slug)
+        
+        if res:
+            res = json.loads(res.decode('utf8'))
+            return HttpResponse(json.dumps({'res':'yes','d':res[3]}),content_type='text/json')
         else:
-            return HttpResponse('no')
+            return HttpResponse(json.dumps({'res':'no'}),content_type='text/json')
             
     return HttpResponse('response')
 

@@ -49,13 +49,13 @@ block js
              //- code...
             setInterval(function(){
                 is_moving({{cam.id}});
-                },30*1000);
+                },5*1000);
 
 
             function is_moving(cam_id) {
                 $.post("{% url 'motioncontrol.views.cam_api'%}",{'cam_id':cam_id,'cmd':'moving'},function(data){
-                    if (data == 'yes') {
-                        $(".moving").text('Moving');
+                    if (data['res'] == 'yes') {
+                        $(".moving").text('Moving ' + data['d']);
                     } else {
                         $(".moving").text('Idle');
                     }
