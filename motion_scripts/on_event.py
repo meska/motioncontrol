@@ -18,7 +18,7 @@ if sys.argv[1] == 'picture':
 
 if sys.argv[1] == 'motion':
     r = redis.StrictRedis(host=REDIS_SERVER, port=6379, db=0)
-    r.setex('motion-event-%s' % sys.argv[2],60,json.dumps(sys.argv))
+    r.setex('motion-event-%s' % sys.argv[2],300,json.dumps(sys.argv))
 
 #if sys.argv[1] == 'picture-redis':
 #    r = redis.StrictRedis(host=REDIS_SERVER, port=6379, db=0)

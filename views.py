@@ -169,7 +169,7 @@ def cronhook(request):
         if not cache.get("%s-onpause" % __package__):
             from motioncontrol.tasks import check_onpause
             Thread(target=check_onpause).start()
-            cache.set("%s-onpause" % __package__,True,600)      
+            cache.set("%s-onpause" % __package__,True,300)      
     
     return HttpResponse('ok')
     
