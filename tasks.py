@@ -2,6 +2,7 @@ from motioncontrol.models import Event,Cam,Server
 from threading import Thread
 from django.conf import settings
 import os
+import redis
 from datetime import datetime,timedelta
 import logging
 from motioncontrol.signals import motion_alert,picture_alert
@@ -12,8 +13,12 @@ def check_onpause():
     from io import BytesIO
     from motioncontrol.models import AlertSubscription
     for a in AlertSubscription.objects.filter(alert_nomotion=True,enabled=True,sent=False,pause=False):
-        mins = int((datetime.now() - a.cam.last_event).seconds / 60)
-        if mins > 30:
+        
+        r = redis.StrictRedis(host=settings.MOTION_REDIS_SERVER, port=6379, db=0)
+        res = r.get('motion-event-%s' % a.cam.slug)
+    
+        if not res:        
+            # idle
             from telegrambot.wrapper import Bot
             b = Bot(settings.TELEGRAM_BOT_TOKEN)
             b.sendMessage(a.destination,"Nessun movimento su /s_%s" % (a.cam.name.replace(' ','_')))
@@ -32,8 +37,11 @@ def check_onpause():
 
     # check for resume            
     for a in AlertSubscription.objects.filter(alert_nomotion=True,enabled=True,sent=True,pause=False):
-        mins = int((datetime.now() - a.cam.last_event).seconds / 60)
-        if mins < 30:
+        r = redis.StrictRedis(host=settings.MOTION_REDIS_SERVER, port=6379, db=0)
+        res = r.get('motion-event-%s' % a.cam.slug)
+    
+        if res:        
+            # moving
             from telegrambot.wrapper import Bot
             b = Bot(settings.TELEGRAM_BOT_TOKEN)
             b.sendMessage(a.destination,"Movimento ripristinato su /s_%s" % (a.cam.name.replace(' ','_')))
