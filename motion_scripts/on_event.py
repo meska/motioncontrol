@@ -12,7 +12,6 @@ REDIS_SERVER = 'cartman.mecom.lan'
 
 if sys.argv[1] == 'picture':
     try:
-        # call webhook
         r = requests.post(WEBHOOK,data=json.dumps(sys.argv),timeout=10)
     except:
         pass
