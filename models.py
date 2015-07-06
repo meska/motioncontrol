@@ -194,13 +194,12 @@ class Cam(models.Model):
             ['output_pictures',"best" if self.output_pictures else "off"],
             ['on_picture_save',self.on_event_script + ' picture '+ self.slug +' %Y%m%d %H%M%S %v %t %f'],
             ['on_camera_lost',self.on_event_script + ' lost '+ self.slug +' %Y%m%d %H%M%S'],
-            #['on_motion_detected',self.on_event_script + ' motion '+ self.slug +' %D %Y%m%d %H%M%S'],
+            ['on_motion_detected',self.on_event_script + ' motion '+ self.slug +' %D %Y%m%d %H%M%S'],
             ['noise_level','32'],
             ['noise_tune','on'],          
             ['threshold',str(cam.threshold)],
             ['threshold_tune','on'],   
             ['on_camera_lost',''],
-            ['on_motion_detected',''],            
             ['target_dir',os.path.join(self.server.local_data_folder,slugify(self.name))],
             ['text_right','%Y-%m-%d %T D:%D']
             ]

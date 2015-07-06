@@ -2,10 +2,9 @@ from django.shortcuts import render,HttpResponse,HttpResponseRedirect,get_object
 from django.conf import settings
 from django.core.cache import cache
 from threading import Thread
-import json
+import json,redis
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-
 from motioncontrol.models import Server,Cam,Event
 
 PORT_PREFIX = '48'
@@ -61,8 +60,16 @@ def cam_api(request):
             c.setVal('setup_mode','on',cached=False)
         else:
             c.setVal('setup_mode','off',cached=False)
-            
         return HttpResponse("ok")
+    
+    if request.POST.get('cam_id') and request.POST.get('cmd') == 'moving':
+        c = Cam.objects.get(id=request.POST.get('cam_id'))
+        r = redis.StrictRedis(host=settings.MOTION_REDIS_SERVER, port=6379, db=0)
+        if r.get('motion-event-%s' % c.slug):
+            return HttpResponse('yes')
+        else:
+            return HttpResponse('no')
+            
     return HttpResponse('response')
 
 @csrf_exempt
