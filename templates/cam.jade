@@ -20,7 +20,7 @@ block content
             //label
             //    input.cam_thresold(cam_id=cam.id)
             //        | Thresold 
-            label.moving(cam_id=cam.id) Moving
+            label.moving(cam_id=cam.id) Idle
         .col-md-8
             .container-fluid
                 for l in cam.last_events
@@ -49,12 +49,16 @@ block js
              //- code...
             setInterval(function(){
                 is_moving({{cam.id}});
-                },5*1000);
+                },30*1000);
 
 
             function is_moving(cam_id) {
                 $.post("{% url 'motioncontrol.views.cam_api'%}",{'cam_id':cam_id,'cmd':'moving'},function(data){
-                    console.log(data);
+                    if (data == 'yes') {
+                        $(".moving").text('Moving');
+                    } else {
+                        $(".moving").text('Idle');
+                    }
                 });
             }
 

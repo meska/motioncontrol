@@ -311,11 +311,11 @@ class Parser():
             # fix thresold if needed 
             t = 0
             if c.alertsubscription_set.filter(alert_nomotion=True,enabled=True).count() > 0:
-                t = 500
+                t = 1000
             else:
                 t = 1500
-                if not c.threshold == 500:
-                    c.threshold = 500
+                if not c.threshold == 1000:
+                    c.threshold = 1000
                     c.save()
 
             if t > 0 and not c.threshold == t:
