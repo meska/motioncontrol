@@ -9,7 +9,7 @@ class ConfigValueAdmin(admin.ModelAdmin):
 
 class CamAdmin(admin.ModelAdmin):
     list_display = (
-        'slug', 'server', 'name', 'thread_number', 'output_pictures', 'online', 'last_event'
+        'slug', 'server', 'name', 'thread_number', 'output_pictures', 'online', 'last_event','threshold'
     )
     list_filter = ('server__name',)
 

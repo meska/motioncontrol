@@ -130,7 +130,7 @@ class Cam(models.Model):
     online = models.BooleanField(default=True)
     last_event = models.DateTimeField(null=True,blank=True)
     on_event_script = models.CharField(max_length=200,default='/etc/motion/on_event_webhook.py')
-    threshold = models.IntegerField(default=1500)
+    threshold = models.IntegerField(default=1500) # set it to 500 if stop mode
     
 
     class Meta:

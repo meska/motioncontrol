@@ -79,18 +79,35 @@ def parseevent(data):
     
 
 def purge_old_pics():
-    # cleanup old pictures
-    for e in Event.objects.filter(datetime__lt=datetime.now()-timedelta(days=30))[0:100]:
+
+
+    # cleanup old pictures, date depend from threshold
+    
+    for e in Event.objects.filter(datetime__lt=datetime.now()-timedelta(days=2),cam__threshold__lte=1000):
+        filename = os.path.join( e.cam.server.remote_data_folder,os.path.split(e.cam.getVal('target_dir').strip())[1],e.filename) 
+        if os.path.exists(filename):
+            try:
+                os.unlink(filename)
+                e.delete()
+            logging.info('%s deleted' % filename)    
+    
+    for e in Event.objects.filter(datetime__lt=datetime.now()-timedelta(days=15),cam__threshold__gt=1000):
         filename = os.path.join( e.cam.server.remote_data_folder,os.path.split(e.cam.getVal('target_dir').strip())[1],e.filename)        
-        os.unlink(filename)
-        e.delete()
-        logging.info('%s deleted' % filename)
-    # cleanup orphans
+        if os.path.exists(filename):
+            os.unlink(filename)
+            e.delete()
+            logging.info('%s deleted' % filename)
+
+    # cleanup orphans records
     for e in Event.objects.all():
         filename = os.path.join( e.cam.server.remote_data_folder,os.path.split(e.cam.getVal('target_dir').strip())[1],e.filename)  
         if not os.path.exists(filename):
             e.delete()
             logging.info('%s deleted' % e)
+    
+    # cleanup orphans files
+    #for c in Cam.objects.all():
+    #    print(e.cam.getVal('target_dir').strip())
             
     
 def sync_cams():

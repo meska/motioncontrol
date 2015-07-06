@@ -271,6 +271,7 @@ class Parser():
                     alert_motion = False,
                     alert_nomotion = True,
                 )
+                
                 if alert.enabled:
                     keys.append("%s %s %s" % (c.name,EM_DISABLE,EM_PAUSE) )
                 else:
@@ -279,6 +280,8 @@ class Parser():
         self.bot.sendMessage(chat_id,"Attiva / Disattiva Alert su pausa?",reply_markup={'keyboard':self.split(keys,2)} )# ,reply_to_message_id=message['message_id'])
         user.last_message = message
         user.save()            
+
+    
         
         return     
     
@@ -302,6 +305,22 @@ class Parser():
             self.bot.sendMessage( user.user_id,"Alerts su %s disattivato per %s" % ("movimento" if args[2] == EM_MOTION else "pausa",args[0]) ,reply_markup={'hide_keyboard':True} )
 
         alert.save()
+            
+        # check for cam threshold
+        if args[2]  == EM_PAUSE:
+            # fix thresold if needed 
+            t = 0
+            if c.alertsubscription_set.filter(alert_nomotion=True,enabled=True).count() > 0:
+                t = 500
+            else:
+                t = 1500
+                if not c.threshold == 500:
+                    c.threshold = 500
+                    c.save()
+
+            if t > 0 and not c.threshold == t:
+                c.threshold = t
+                c.save()
             
     
     
