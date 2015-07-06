@@ -11,6 +11,7 @@ from PIL import Image
 from time import sleep
 import logging,os
 import re
+import redis
 #logger = logging.getLogger(__name__)
 
 
@@ -144,6 +145,18 @@ class Cam(models.Model):
         return u"%s@%s" % (self.name,self.server.name)
     
     @property
+    def is_moving(self):
+        #is moving
+        r = redis.StrictRedis(host=settings.MOTION_REDIS_SERVER, port=6379, db=0)
+        res = r.get('motion-event-%s' % self.slug)
+        if res:
+            from json import loads
+            self.delta = loads(res.decode("utf8"))[3]
+            return True
+        else:
+            return False
+            
+    @property
     def is_online(self):
         try:
             r = requests.get('%s%s/detection/connection' % (self.server.admin_url,self.thread_number))
@@ -209,6 +222,14 @@ class Cam(models.Model):
             #default_settings.append(['threshold','100'])
             #default_settings.append(['threshold_tune','off'])
             
+        # check for mask in cams folder
+        if os.path.exists(os.path.join(self.server.remote_data_folder,"%s.pgm"%slugify(self.name))):
+            # mask file found adding to settings
+            default_settings.append(['mask_file',os.path.join(self.server.local_data_folder,"%s.pgm"%slugify(self.name))])            
+        else:
+            # no mask file
+            default_settings.append(['mask_file','']) 
+        
         
         for e in default_settings:
             if not self.getVal(e[0]).strip() == e[1]:

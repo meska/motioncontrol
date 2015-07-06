@@ -69,6 +69,7 @@ block js
                 $.post("{% url 'motioncontrol.views.cam_api'%}",{'cam_id':cam_id,'cmd':'setup_mode','val':val},function(data){
                     console.log(data);
                     setTimeout(function(){reloadStream();},5*1000);   
-                    });
                 });
             });
+            is_moving({{cam.id}});
+        });
