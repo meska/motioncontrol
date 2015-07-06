@@ -130,6 +130,7 @@ class Cam(models.Model):
     online = models.BooleanField(default=True)
     last_event = models.DateTimeField(null=True,blank=True)
     on_event_script = models.CharField(max_length=200,default='/etc/motion/on_event_webhook.py')
+    threshold = models.IntegerField(default=1500)
     
 
     class Meta:
@@ -193,15 +194,15 @@ class Cam(models.Model):
             ['output_pictures',"best" if self.output_pictures else "off"],
             ['on_picture_save',self.on_event_script + ' picture '+ self.slug +' %Y%m%d %H%M%S %v %t %f'],
             ['on_camera_lost',self.on_event_script + ' lost '+ self.slug +' %Y%m%d %H%M%S'],
-            ['on_motion_detected',self.on_event_script + ' motion '+ self.slug +' %D %Y%m%d %H%M%S'],
+            #['on_motion_detected',self.on_event_script + ' motion '+ self.slug +' %D %Y%m%d %H%M%S'],
             ['noise_level','32'],
             ['noise_tune','on'],          
-            ['threshold','1500'],
+            ['threshold',str(cam.threshold)],
             ['threshold_tune','on'],   
             ['on_camera_lost',''],
             ['on_motion_detected',''],            
             ['target_dir',os.path.join(self.server.local_data_folder,slugify(self.name))],
-            ['text_right','%Y-%m-%d\n%T\nD:%D']
+            ['text_right','%Y-%m-%d %T D:%D']
             ]
         
         # if pause alert enabled
@@ -361,5 +362,9 @@ def post_save_cam(sender, **kwargs):
         cam.slug = slugify("%s %s" % (cam.name,cam.thread_number))
         cam.save()
         return
+    
+    # threshold changed
+    if not cam.getVal('threshold') == str(cam.threshold):
+        cam.setVal('threshold',str(cam.threshold))
 
     #Thread(target=cam.checksettings).start()
