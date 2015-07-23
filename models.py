@@ -133,6 +133,9 @@ class Server(models.Model):
     
     @property  
     def cams(self):
+        out = cache.get('camlist')
+        if out:
+            return out
         out = []
         
         r = None
@@ -155,6 +158,7 @@ class Server(models.Model):
                     if not c.name:
                         c.save()
                     out.append(c)
+                cache.set('camlist',out,timeout=60)
                 return out
         return []    
     
@@ -275,6 +279,7 @@ class Cam(models.Model):
         
         self.restart()
 
+
     def snapshot(self):
         c = cache.get('snap-%s-%s' % (self.server.id,self.id))
         if c:
@@ -312,9 +317,18 @@ class Cam(models.Model):
             img = Image.open(os.path.join(os.path.split(__file__)[0],'static','disconnected.jpg')).resize([640,480])
             return img
         
+
+       
     def streamurl(self):
         # REQUIRES NGINX CONFIGURATION
         return "%s%02d" % (self.server.stream_url,self.thread_number)
+
+    @property
+    def last_event(self):
+        try:
+            return self.event_set.latest('datetime')
+        except:
+            return None
 
     @property
     def last_events(self):

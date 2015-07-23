@@ -14,8 +14,9 @@ block content
                 for cam in server.cams
                     if cam.is_online
                         .col-md-3
-                            a(href='{% url "motioncontrol.views.showcam" cam.slug %}')
-                                img.camimage(id=cam.server.name+'_'+str(cam.thread_number) src="{% url 'motioncontrol.views.snapshot' cam.slug %}")
+                            if cam.last_event
+                                a(href='{% url "motioncontrol.views.showcam" cam.slug %}')
+                                    img.camimage(id=cam.server.name+'_'+str(cam.thread_number) src="{% url 'motioncontrol.views.event_pic' cam.last_event.id %}")
 
 block js 
     script.
