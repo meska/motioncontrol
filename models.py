@@ -324,7 +324,7 @@ class Cam(models.Model):
         return "%s%02d" % (self.server.stream_url,self.thread_number)
 
     @property
-    def last_event(self):
+    def lastpic(self):
         try:
             return self.event_set.latest('datetime')
         except:
@@ -375,6 +375,10 @@ class Event(models.Model):
     datetime = models.DateTimeField()
     event_type = models.IntegerField()
     filename = models.CharField(max_length=250)
+
+    
+    def __str__(self):
+        return self.datetime
 
     class Meta:
         #app_label = 'motioncontrol'

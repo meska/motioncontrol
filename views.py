@@ -77,7 +77,7 @@ def webhook(request):
     from motioncontrol.signals import motion_event
     motion_event.send(__name__,data=json.loads(request.body.decode('utf8')))
     
-    return HttpResponse()
+    return HttpResponse('ok')
 
 @csrf_exempt
 def ifttthook(request,user_id,cmd,param):
