@@ -245,7 +245,7 @@ class Cam(models.Model):
             ['minimum_motion_frames',"3"],
             ['ffmpeg_timelapse',"5"],
             ['ffmpeg_timelapse_mode',"daily"],
-            ['output_pictures',"best" if self.output_pictures else "off"],
+            ['output_pictures',"center" if self.output_pictures else "off"],
             ['on_picture_save',self.on_event_script + ' picture '+ self.slug +' %Y%m%d %H%M%S %v %t %f'],
             ['on_camera_lost',self.on_event_script + ' lost '+ self.slug +' %Y%m%d %H%M%S'],
             ['on_motion_detected',self.on_event_script + ' motion '+ self.slug +' %D %Y%m%d %H%M%S'],
