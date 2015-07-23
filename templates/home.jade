@@ -29,8 +29,8 @@ block js
         }
 
         function refreshCams() {
+            console.log("Refresh Cams..");
             $(".camimage").each(function(id,obj){
-                console.log("Refresh Cams..");
                 refreshCam(obj.id);
             });
         }
