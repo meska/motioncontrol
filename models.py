@@ -20,11 +20,11 @@ import redis
 class Server(models.Model):
     name = models.CharField(max_length=100,unique=True)
     admin_url = models.CharField(max_length=200,unique=True,default='http://127.0.0.1:8000/')
-    stream_url = models.CharField(max_length=200,unique=True,default='http://127.0.0.1/',help_text='Stream base url, requires nginx configuration')
+    stream_url = models.CharField(max_length=200,unique=True,default='http://127.0.0.1/',help_text='Stream base url, requires nginx configuration (Ex. http://xxx/stream/cam)')
     local_config_folder = models.CharField(max_length=200,null=True,blank=True,help_text='On motion server')
     local_data_folder = models.CharField(max_length=200,null=True,blank=True,help_text='On motion server')
-    remote_config_folder = models.CharField(max_length=200,null=True,blank=True,help_text='On Django server')
-    remote_data_folder = models.CharField(max_length=200,null=True,blank=True,help_text='On Django server')
+    remote_config_folder = models.CharField(max_length=200,null=True,blank=True,help_text='Mounted on this Django server')
+    remote_data_folder = models.CharField(max_length=200,null=True,blank=True,help_text='Mounted on this Django server')
     
     
     class Meta:
@@ -32,7 +32,7 @@ class Server(models.Model):
         #app_label = 'motioncontrol'
 
     
-    def __unicode__(self):
+    def __str__(self):
         return self.name
     
     def getVal(self,thread_number,name,cached=True):
@@ -42,7 +42,7 @@ class Server(models.Model):
             return c 
 
         try:
-            r = requests.get('%s%s/config/get' % (self.admin_url,thread_number),params={'query':name},timeout=30)
+            r = requests.get('%s%s/config/get' % (self.admin_url,thread_number),params={'query':name},timeout=5)
             if r.status_code == requests.codes.ok:
                 # get only the first line atm
                 val = r.text.splitlines()[0].split("=")[1].strip() 
@@ -64,13 +64,13 @@ class Server(models.Model):
         if not prev == None and not prev == val:
             # value differs, updating
             try:
-                r = requests.get('%s%s/config/set' % (self.admin_url,thread_number),params={name:val},timeout=30)
+                r = requests.get('%s%s/config/set' % (self.admin_url,thread_number),params={name:val},timeout=5)
                 if r.status_code == requests.codes.ok:
                 
-                    r = requests.get('%s%s/config/write' % (self.admin_url,thread_number),timeout=30)
+                    r = requests.get('%s%s/config/write' % (self.admin_url,thread_number),timeout=5)
                     sleep(1)
                     if restart:
-                        r = requests.get('%s%s/action/restart' % (self.admin_url,thread_number),timeout=30)
+                        r = requests.get('%s%s/action/restart' % (self.admin_url,thread_number),timeout=5)
                     return val 
                 
             except Exception as e:
@@ -93,6 +93,43 @@ class Server(models.Model):
     def checkSettings(self):
         # set default server settings
         self.setVal('0','output_pictures','off')
+
+
+    @property
+    def cams_boh(self):
+        # get cams from db, if empty try to get them from server
+        out = Cam.objects.filter(server=self)
+        if len(out) == 0:
+            out = self.cams_download()
+        else:
+            return list(out)
+        
+    @property  
+    def cams_sync(self):
+        out = []
+        
+        r = None
+        for i in range(5):
+            try:
+                r = requests.get(self.admin_url,timeout=5)
+                if r:
+                    break
+            except:
+                sleep(5)
+
+        if not r == None:
+            if r.status_code == requests.codes.ok:
+                res = r.text.splitlines()[2:]
+    
+                for r in res:
+                    c,created = Cam.objects.get_or_create(server=self,thread_number=int(r.strip()))
+                    if created:
+                        c.checksettings()
+                    if not c.name:
+                        c.save()
+                    out.append(c)
+                return out
+        return [] 
     
     @property  
     def cams(self):
@@ -101,7 +138,7 @@ class Server(models.Model):
         r = None
         for i in range(5):
             try:
-                r = requests.get(self.admin_url,timeout=30)
+                r = requests.get(self.admin_url,timeout=5)
                 if r:
                     break
             except:

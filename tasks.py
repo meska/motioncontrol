@@ -123,7 +123,8 @@ def purge_old_pics():
             
     
 def sync_cams():
-    # sync cams
+    # sync cams with config file
+    
     for s in Server.objects.all():
         for c in s.cams:
             c.checksettings()        
