@@ -59,31 +59,25 @@ def check_onpause():
                 #a.save()       
 
 def parseevent(data):
-    
-    try:
-        if data[1] == "lost":
-            cam = Cam.objects.get(slug=data[2])
-            cam.save()
+    if data[1] == "lost":
+        cam = Cam.objects.get(slug=data[2])
+        cam.save()
 
-        if data[1] == "motion":
-            cam = Cam.objects.get(slug=data[2])
-            cam.last_event = datetime.strptime("%s%s" % (data[3],data[4]),"%Y%m%d%H%M%S")
-            cam.save()     
-            motion_alert.send(cam,data=data)
-         
+    if data[1] == "motion":
+        cam = Cam.objects.get(slug=data[2])
+        cam.last_event = datetime.strptime("%s%s" % (data[3],data[4]),"%Y%m%d%H%M%S")
+        cam.save()     
+        motion_alert.send(cam,data=data)
+     
 
-        if data[1] == "picture":
-            cam = Cam.objects.get(slug=data[2])
-            cam.last_event = datetime.strptime("%s%s" % (data[3],data[4]),"%Y%m%d%H%M%S")
-            cam.save()     
-            event,created = Event.objects.get_or_create(cam=cam,datetime=datetime.strptime(data[3]+data[4],"%Y%m%d%H%M%S"),event_type=data[5],filename=os.path.split(data[7])[1])    
-            if created:
-                picture_alert.send(cam,data=event)
-            #for ua in cam.TelegramUserAlert_set.filter(receive_alerts=True):
-            #    ua.sendAlert(event,data[1])
-            
-    except Exception as e:
-        print("mc ParseEvent Error: %s" % e)
+    if data[1] == "picture":
+        cam = Cam.objects.get(slug=data[2])
+        cam.last_event = datetime.strptime("%s%s" % (data[3],data[4]),"%Y%m%d%H%M%S")
+        cam.save()     
+        event,created = Event.objects.get_or_create(cam=cam,datetime=datetime.strptime(data[3]+data[4],"%Y%m%d%H%M%S"),event_type=data[5],filename=os.path.split(data[7])[1])    
+        if created:
+            picture_alert.send(cam,data=event)
+
     
 
 def purge_old_pics():
